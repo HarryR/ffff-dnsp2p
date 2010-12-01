@@ -5,8 +5,13 @@
 # Fuck all the geeks who do nothing but quibble
 # I present: FFFF-dnsp2p
 
+SYS:=$(shell uname -s)
+
 CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
-CFLAGS+=-Wall -Wextra -fnested-functions -std=gnu99
+CFLAGS+=-Wall -Wextra -std=gnu99 
+ifeq ($(SYS),Darwin)
+CFLAGS+=-fnested-functions
+endif
 LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib -levent -ltokyocabinet
 LIBS=-lgcrypt
 
