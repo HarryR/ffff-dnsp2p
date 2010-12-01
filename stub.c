@@ -41,12 +41,16 @@ main(int argc, char** argv) {
     bool should_show_help = (argc == 1);
 
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
-    if (gcry_err_code(err))
+    if (gcry_err_code(err)) {
       fprintf(stderr, "Cannot enable gcrypt's secure memory management\n");
+      exit(EXIT_FAILURE);
+    }
 
     err = gcry_control(GCRYCTL_USE_SECURE_RNDPOOL, 1);
-    if (gcry_err_code(err))
+    if (gcry_err_code(err)) {
       fprintf(stderr, "Cannot enable gcrypt's secure random number generator\n");
+      exit(EXIT_FAILURE);
+    }
 
     // TODO: find unused local port for P2P listen, and set using f4_set_listen_p2p
 
