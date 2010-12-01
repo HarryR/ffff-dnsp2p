@@ -26,11 +26,13 @@ show_help( char *argv0 ) {
     fprintf(stderr, " -P <addr:port>    Listen address & port for P2P connectivity (TCP+UDP)\n");
     fprintf(stderr, " -s <file>         DB file for node state storage\n");
     fprintf(stderr, " -p <file>         DB file for persistent publish storage\n");
+    fprintf(stderr, " -r <file>         Properties file for peer list\n");
     fprintf(stderr, " -h                Show this help\n");
 }
 
 int
 main(int argc, char** argv) {
+    gcry_error_t err;
     f4_ctx_t *ctx;
     struct event_base *base;
     base = event_base_new();
@@ -38,10 +40,18 @@ main(int argc, char** argv) {
     int ret = EXIT_SUCCESS;
     bool should_show_help = (argc == 1);
 
+    err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
+    if (gcry_err_code(err))
+      fprintf(stderr, "Cannot enable gcrypt's secure memory management\n");
+
+    err = gcry_control(GCRYCTL_USE_SECURE_RNDPOOL, 1);
+    if (gcry_err_code(err))
+      fprintf(stderr, "Cannot enable gcrypt's secure random number generator\n");
+
     // TODO: find unused local port for P2P listen, and set using f4_set_listen_p2p
 
     int ch;
-    while( (ch = getopt(argc, argv, "D:A:P:s:p:h")) != -1 ) {
+    while( (ch = getopt(argc, argv, "D:A:P:s:p:r:h")) != -1 ) {
         switch(ch) {
         case 'D':
             f4_set_listen_dns(ctx, optarg);
@@ -60,6 +70,10 @@ main(int argc, char** argv) {
 
         case 'p':
             f4_set_publish_db_file(ctx, optarg);
+            break;
+
+        case 'r':
+            f4_set_peers_file(ctx, optarg);
             break;
 
         case 'h':

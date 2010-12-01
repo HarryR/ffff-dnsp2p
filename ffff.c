@@ -13,7 +13,9 @@
 #include <netdb.h>
 #include <unistd.h> // XXX: windows
 
+#include <event2/event.h>
 #include <event2/util.h>
+#include <event2/keyvalq_struct.h>
 #include "ops.h"
 
 f4_ctx_t *

@@ -5,9 +5,9 @@
 # Fuck all the geeks who do nothing but quibble
 # I present: FFFF-dnsp2p
 
-CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
-CFLAGS+=-Wall -Wextra -fnested-functions -std=gnu99
-LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib -levent -ltokyocabinet
+CFLAGS=-I../libevent-2.0.9-rc/include -I/usr/include
+CFLAGS+=-Wall -Wextra -std=gnu99
+LDFLAGS=-Levent2/lib -levent -ltokyocabinet
 LIBS=-lgcrypt
 
 libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o

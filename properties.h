@@ -5,7 +5,7 @@
 #include <sys/queue.h>
 #include <string.h>
 #include <sys/types.h>
-#include <evhttp.h>
+#include <event2/http.h>
 
 void properties_parse_line( char *line, struct evkeyvalq *output );
 void properties_parse_file( FILE *fh, struct evkeyvalq *output );
