@@ -15,7 +15,8 @@ enum {
     F4_ERR_CANT_OPEN_PUBLISH_DB,
     F4_ERR_CANT_OPEN_SOCKET_P2P,
     F4_ERR_CANT_INIT_P2P,
-    F4_ERR_CANT_INIT_ADMIN
+    F4_ERR_CANT_INIT_ADMIN,
+    F4_ERR_CANT_INIT_DNS
 };
 
 struct f4_ctx {
@@ -50,7 +51,7 @@ struct f4_ctx {
     /** Should we act as a DNS to P2P resolver? */
     bool role_dns;
     struct sockaddr_storage listen_dns;
-    evutil_socket_t socket_dns;
+    void *dns_ctx;
 
     /** Should we run an admin interface */
     bool role_admin;

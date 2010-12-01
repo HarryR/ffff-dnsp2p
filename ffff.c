@@ -1,5 +1,6 @@
 #include "ffff.h"
 #include "admin.h"
+#include "dns.h"
 #include "seccure/protocol.h"
 #include "properties.h"
 #include "dht/dht.h"
@@ -19,7 +20,6 @@ f4_new( void ) {
     f4_ctx_t *ctx = calloc(sizeof(f4_ctx_t),1);
     assert( ctx != NULL );
     memset(ctx, 0, sizeof(f4_ctx_t));  
-    ctx->socket_dns = -1;
     ctx->socket_p2p_app = -1;
     ctx->socket_p2p_dht = -1;
     return ctx;
@@ -318,6 +318,14 @@ f4_init(f4_ctx_t *ctx) {
         }
     }
 
+    if( ctx->role_dns ) {
+        ctx->dns_ctx = f4dns_new(ctx);
+        if( ! f4dns_init(ctx->dns_ctx) ) {
+            ctx->errno = F4_ERR_CANT_INIT_DNS;
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -335,7 +343,6 @@ void f4_free( f4_ctx_t *ctx ) {
 
     if( ctx->cp != NULL ) curve_release(ctx->cp);
 
-    if( ctx->socket_dns != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_dns);
     if( ctx->socket_p2p_app != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_app);
     if( ctx->socket_p2p_dht != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_dht);
 
