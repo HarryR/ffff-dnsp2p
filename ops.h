@@ -15,6 +15,8 @@ struct f4op {
     struct rb_node node;
     char id[20];
     uint8_t mode;
+    char *type;
+    char *fqn;
 };
 typedef struct f4op f4op_t;
 

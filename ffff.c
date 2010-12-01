@@ -14,6 +14,7 @@
 #include <unistd.h> // XXX: windows
 
 #include <event2/util.h>
+#include "ops.h"
 
 f4_ctx_t *
 f4_new( void ) {
@@ -299,6 +300,9 @@ f4_init(f4_ctx_t *ctx) {
             return false;
         }
     }
+
+    ctx->op_ctx = f4op_new_ctx(ctx);
+    f4op_init_ctx(ctx->op_ctx);
 
     if( ! f4_init_peers(ctx) )  {
         ctx->errno = F4_ERR_CANT_INIT_PEERS;

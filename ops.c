@@ -102,6 +102,10 @@ f4op_new( f4op_ctx_t *ctx, uint8_t mode, const char *id ) {
 void
 f4op_free( f4op_ctx_t *ctx, f4op_t *op ) {
     assert( ctx != NULL );
+
     // TODO: cancel any pending operations
+    
+    if( op->fqn != NULL ) free(op->fqn);
+    if( op->type != NULL ) free(op->type);
     free(op);
 }

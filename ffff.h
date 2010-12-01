@@ -58,6 +58,9 @@ struct f4_ctx {
     struct sockaddr_storage listen_admin;
     void *admin_ctx;
 
+    // Operations in progress
+    void *op_ctx;
+
     // Crypto shizzle, yay
     struct curve_params *cp;
     char private_key[32];
