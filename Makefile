@@ -12,8 +12,8 @@ CFLAGS+=-Wall -Wextra -std=gnu99
 ifeq ($(SYS),Darwin)
 CFLAGS+=-fnested-functions
 endif
-LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib -levent -ltokyocabinet
-LIBS=-lgcrypt
+LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib
+LIBS=-lgcrypt -levent -ltokyocabinet
 
 libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o
 dnsp2p_objs=stub.o
