@@ -7,13 +7,17 @@
 #include <event2/dns.h>
 #include <event2/http.h>
 
+#include "seccure/curves.h"
+
 enum {
     F4_ERR_CANT_OPEN_DB,
     F4_ERR_CANT_INIT_PEERS,
-    F4_ERR_CANT_OPEN_PUBLISH_DB
+    F4_ERR_CANT_OPEN_PUBLISH_DB,
+    F4_ERR_CANT_OPEN_SOCKET_P2P
 };
 
 struct f4_ctx {
+    bool is_running;
     unsigned int errno;
     struct event_base *base;
 
@@ -31,16 +35,29 @@ struct f4_ctx {
     TCTDB *publish_db;
 
     /** Should be actively publish our own records? */
-    bool role_p2p_publish;
+    bool role_p2p_publish;    
     struct sockaddr_storage listen_p2p;
+
+    // dht related stuff
+    bool dht_done_init;
+    evutil_socket_t socket_p2p_dht;
+    struct event *socket_p2p_dht_event;
+
+    evutil_socket_t socket_p2p_app;
 
     /** Should we act as a DNS to P2P resolver? */
     bool role_dns;
     struct sockaddr_storage listen_dns;
+    evutil_socket_t socket_dns;
 
     /** Should we run an admin interface */
     bool role_admin;
     struct sockaddr_storage listen_admin;
+    evutil_socket_t socket_admin;
+
+    struct curve_params *cp;
+    char private_key[32];
+    char public_key[20];
 };
 typedef struct f4_ctx f4_ctx_t;
 

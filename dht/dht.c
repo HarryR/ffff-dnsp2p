@@ -1578,7 +1578,7 @@ dht_dump_tables(FILE *f)
 }
 
 int
-dht_init(int s, int s6, const unsigned char *id, const unsigned char *v)
+dht_init(int s, int s6, const char *id, const unsigned char *v)
 {
     int rc;
 

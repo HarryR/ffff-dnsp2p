@@ -1,5 +1,7 @@
 #include "ffff.h"
+#include "seccure/protocol.h"
 #include "properties.h"
+#include "dht/dht.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -16,7 +18,10 @@ f4_new( void ) {
     f4_ctx_t *ctx = calloc(sizeof(f4_ctx_t),1);
     assert( ctx != NULL );
     memset(ctx, 0, sizeof(f4_ctx_t));
-    
+    ctx->socket_admin = -1;
+    ctx->socket_dns = -1;
+    ctx->socket_p2p_app = -1;
+    ctx->socket_p2p_dht = -1;
     return ctx;
 }
 
@@ -30,6 +35,7 @@ void
 f4_set_db_file(f4_ctx_t *ctx, const char *db_file) {
     assert( db_file != NULL );
     assert( strlen(db_file) );
+    if( ctx->db_file ) free(ctx->db_file);
     ctx->db_file = strdup(db_file);
 }
 
@@ -37,13 +43,15 @@ void
 f4_set_peers_file(f4_ctx_t *ctx, const char *peers_file) {
     assert( peers_file != NULL );
     assert( strlen(peers_file) );
+    if( ctx->peers_file ) free(ctx->peers_file);
     ctx->peers_file = strdup(peers_file);
 }
 
 void f4_set_publish_db_file(f4_ctx_t *ctx, const char *publish_db_file) {
     assert( publish_db_file != NULL );
     assert( strlen(publish_db_file) );
-    ctx->publish_file = publish_db_file;
+    if( ctx->publish_file ) free(ctx->publish_file);
+    ctx->publish_file = strdup(publish_db_file);
     ctx->role_p2p_publish = true;
 }
 
@@ -131,8 +139,149 @@ f4_init_peers( f4_ctx_t *ctx ) {
     return invalid_count == 0;
 }
 
+static bool
+socket_v6_only( evutil_socket_t s6 ) {
+    int rc;
+    int val = 1;
+
+    rc = setsockopt(s6, IPPROTO_IPV6, IPV6_V6ONLY,
+                    (char *)&val, sizeof(val));
+    return rc == 0;
+}
+
+// Externals from dht.c
+int
+dht_random_bytes(void *buf, size_t size) {
+    gcry_randomize(buf, size, GCRY_STRONG_RANDOM);
+    return 0;
+}
+void
+dht_hash(void *hash_return, int hash_size,
+         const void *v1, int len1,
+         const void *v2, int len2,
+         const void *v3, int len3)
+{
+    gcry_error_t err;
+    gcry_md_hd_t mh;
+    char *md;
+
+    err = gcry_md_open(&mh, GCRY_MD_MD5, GCRY_MD_FLAG_SECURE);
+    assert( ! gcry_err_code(err) );
+
+    gcry_md_write(mh, v1, len1);
+    gcry_md_write(mh, v2, len2);
+    gcry_md_write(mh, v3, len3);
+
+    gcry_md_final(mh);
+
+    md = (char*)gcry_md_read(mh, 0);
+    memcpy(hash_return, md, hash_size > 16 ? 16 : hash_size);
+    gcry_md_close(mh);
+}
+
+static void
+f4_cb_dht(void *_ctx, int event,
+             unsigned char *info_hash,
+             void *data, size_t data_len)
+{
+    f4_ctx_t *ctx = (f4_ctx_t*)ctx;
+
+    // TODO: match info_hash to a pending DNS query/share operation
+    // We can then create a connection to the nodes given in 'data' to complete
+    // the operation.
+}
+
+static void
+f4_cb_dht_read( evutil_socket_t s, short event, void *_ctx ) {
+    f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
+    time_t tosleep;
+    dht_periodic(event == EV_WRITE, &tosleep, f4_cb_dht, ctx);
+}
+
+static bool
+f4_init_p2p( f4_ctx_t *ctx ) {
+    // XXX: for now only bind on DHT port until the app side is worked out
+    /*
+    ctx->socket_p2p_app = socket(ctx->listen_p2p.ss_family, SOCK_STREAM, 0);
+    if( ctx->socket_p2p_app == -1 ) {
+        perror("Canot p2p app socket()");
+        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        return false;
+    }
+    evutil_make_socket_nonblocking(ctx->socket_p2p_app);
+    evutil_make_listen_socket_reuseable(ctx->socket_p2p_app);
+
+    if( bind(ctx->socket_p2p_app, (struct sockaddr *)&ctx->listen_p2p, sizeof(struct sockaddr_storage)) != 0 ) {
+        perror("Cannot bind() p2p app");
+        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        return false;
+    }
+    */
+
+    ctx->socket_p2p_dht = socket(ctx->listen_p2p.ss_family, SOCK_DGRAM, 0);
+    if( ctx->socket_p2p_dht == -1 ) {
+        perror("Cannot p2p dht socket()");
+        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        return false;
+    }
+    // XXX: we need separate sockets for v4 and v6 DHT sockets
+    // TODO: fully integrate the DHT library with libevent
+    if( ctx->listen_p2p.ss_family == AF_INET6 ) {
+        socket_v6_only( ctx->socket_p2p_dht );
+    }
+    evutil_make_socket_nonblocking(ctx->socket_p2p_dht);
+    evutil_make_listen_socket_reuseable(ctx->socket_p2p_dht);
+
+    if( bind(ctx->socket_p2p_dht, (struct sockaddr *)&ctx->listen_p2p, sizeof(struct sockaddr_storage)) != 0 ) {
+        perror("Cannot bind() p2p dht");
+        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        return false;
+    }
+
+    evutil_socket_t s4 = -1, s6 = -1;
+
+    if( ctx->listen_p2p.ss_family == AF_INET6 ) {
+        s6 = ctx->socket_p2p_dht;
+    }
+    else {
+        assert( ctx->listen_p2p.ss_family == AF_INET );
+        s4 = ctx->socket_p2p_dht;
+    }
+
+    if( dht_init(s4, s6, ctx->public_key, (unsigned char*)"P2NS") < 0 ) {
+        perror("dht_init()");
+        return false;
+    }
+    ctx->dht_done_init = true;
+
+    // XXX: dht isn't fully integrated with libevent
+    ctx->socket_p2p_dht_event = event_new(ctx->base, ctx->socket_p2p_dht, EV_READ | EV_PERSIST, f4_cb_dht_read, ctx);
+    event_add(ctx->socket_p2p_dht_event, NULL);
+
+    return true;
+}
+
+static void
+f4_init_crypto(f4_ctx_t *ctx) {
+    struct affine_point private_P;
+    gcry_mpi_t private_d;
+
+    ctx->cp = curve_by_pk_len_compact(20);
+    assert( ctx->cp != NULL );
+
+    gcry_randomize(&ctx->private_key[0], sizeof(ctx->private_key), GCRY_STRONG_RANDOM);
+    private_d = hash_to_exponent(ctx->private_key, ctx->cp);
+    private_P = pointmul(&ctx->cp->dp.base, private_d, &ctx->cp->dp);
+    gcry_mpi_release(private_d);
+
+    compress_to_string(ctx->public_key, DF_BIN, &private_P, ctx->cp);
+    point_release(&private_P);
+}
+
 bool
 f4_init(f4_ctx_t *ctx) {
+    f4_init_crypto(ctx);
+
     ctx->db = tctdbnew();
     assert( ctx->db != NULL );
     if( ! tctdbopen(ctx->db, ctx->db_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
@@ -156,11 +305,27 @@ f4_init(f4_ctx_t *ctx) {
         return false;
     }
 
+    if( ! f4_init_p2p(ctx) ) {
+        return false;
+    }
+
     return true;
 }
 
 void f4_free( f4_ctx_t *ctx ) {
     assert( ctx != NULL );
+
+    if( ctx->dht_done_init ) {
+        event_del(ctx->socket_p2p_dht_event);
+        dht_uninit(1);
+    }
+
+    if( ctx->cp != NULL ) curve_release(ctx->cp);
+
+    if( ctx->socket_admin != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_admin);
+    if( ctx->socket_dns != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_dns);
+    if( ctx->socket_p2p_app != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_app);
+    if( ctx->socket_p2p_dht != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_dht);
 
     if( ctx->peers ) free(ctx->peers);
     if( ctx->peers_file ) free(ctx->peers_file);

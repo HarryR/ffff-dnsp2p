@@ -108,8 +108,6 @@ main(int argc, char **argv)
     memset(&sin6, 0, sizeof(sin6));
     sin6.sin6_family = AF_INET6;
 
-
-
     while(1) {
         opt = getopt(argc, argv, "q46b:i:");
         if(opt < 0)
