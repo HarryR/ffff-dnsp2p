@@ -13,7 +13,9 @@ enum {
     F4_ERR_CANT_OPEN_DB,
     F4_ERR_CANT_INIT_PEERS,
     F4_ERR_CANT_OPEN_PUBLISH_DB,
-    F4_ERR_CANT_OPEN_SOCKET_P2P
+    F4_ERR_CANT_OPEN_SOCKET_P2P,
+    F4_ERR_CANT_INIT_P2P,
+    F4_ERR_CANT_INIT_ADMIN
 };
 
 struct f4_ctx {
@@ -53,8 +55,9 @@ struct f4_ctx {
     /** Should we run an admin interface */
     bool role_admin;
     struct sockaddr_storage listen_admin;
-    evutil_socket_t socket_admin;
+    void *admin_ctx;
 
+    // Crypto shizzle, yay
     struct curve_params *cp;
     char private_key[32];
     char public_key[20];

@@ -10,7 +10,7 @@ CFLAGS+=-Wall -Wextra -std=c99 -pedantic
 LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib -levent -ltokyocabinet
 LIBS=-lgcrypt
 
-libffff_objs=ffff.o properties.o
+libffff_objs=ffff.o properties.o admin.o
 dnsp2p_objs=stub.o
 seccure_objs=seccure/curves.o seccure/serialize.o seccure/protocol.o seccure/ecc.o seccure/aes256ctr.o seccure/numtheory.o
 dht_objs=dht/dht.o

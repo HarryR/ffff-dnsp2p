@@ -1,4 +1,5 @@
 #include "ffff.h"
+#include "admin.h"
 #include "seccure/protocol.h"
 #include "properties.h"
 #include "dht/dht.h"
@@ -17,8 +18,7 @@ f4_ctx_t *
 f4_new( void ) {
     f4_ctx_t *ctx = calloc(sizeof(f4_ctx_t),1);
     assert( ctx != NULL );
-    memset(ctx, 0, sizeof(f4_ctx_t));
-    ctx->socket_admin = -1;
+    memset(ctx, 0, sizeof(f4_ctx_t));  
     ctx->socket_dns = -1;
     ctx->socket_p2p_app = -1;
     ctx->socket_p2p_dht = -1;
@@ -144,8 +144,7 @@ socket_v6_only( evutil_socket_t s6 ) {
     int rc;
     int val = 1;
 
-    rc = setsockopt(s6, IPPROTO_IPV6, IPV6_V6ONLY,
-                    (char *)&val, sizeof(val));
+    rc = setsockopt(s6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&val, sizeof(val));
     return rc == 0;
 }
 
@@ -189,6 +188,7 @@ f4_cb_dht(void *_ctx, int event,
     // TODO: match info_hash to a pending DNS query/share operation
     // We can then create a connection to the nodes given in 'data' to complete
     // the operation.
+    assert( false );
 }
 
 static void
@@ -306,7 +306,16 @@ f4_init(f4_ctx_t *ctx) {
     }
 
     if( ! f4_init_p2p(ctx) ) {
+        ctx->errno = F4_ERR_CANT_INIT_P2P;
         return false;
+    }
+
+    if( ctx->role_admin ) {
+        ctx->admin_ctx = f4admin_new(ctx);
+        if( ! f4admin_init(ctx->admin_ctx) ) {
+            ctx->errno = F4_ERR_CANT_INIT_ADMIN;
+            return false;
+        }
     }
 
     return true;
@@ -315,6 +324,10 @@ f4_init(f4_ctx_t *ctx) {
 void f4_free( f4_ctx_t *ctx ) {
     assert( ctx != NULL );
 
+    if( ctx->admin_ctx ) {
+        f4admin_free(ctx->admin_ctx);
+    }
+
     if( ctx->dht_done_init ) {
         event_del(ctx->socket_p2p_dht_event);
         dht_uninit(1);
@@ -322,7 +335,6 @@ void f4_free( f4_ctx_t *ctx ) {
 
     if( ctx->cp != NULL ) curve_release(ctx->cp);
 
-    if( ctx->socket_admin != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_admin);
     if( ctx->socket_dns != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_dns);
     if( ctx->socket_p2p_app != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_app);
     if( ctx->socket_p2p_dht != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_dht);
