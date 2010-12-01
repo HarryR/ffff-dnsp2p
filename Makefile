@@ -6,11 +6,11 @@
 # I present: FFFF-dnsp2p
 
 CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
-CFLAGS+=-Wall -Wextra -std=c99 -pedantic
+CFLAGS+=-Wall -Wextra -fnested-functions -std=gnu99
 LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib -levent -ltokyocabinet
 LIBS=-lgcrypt
 
-libffff_objs=ffff.o properties.o admin.o dns.o
+libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o
 dnsp2p_objs=stub.o
 seccure_objs=seccure/curves.o seccure/serialize.o seccure/protocol.o seccure/ecc.o seccure/aes256ctr.o seccure/numtheory.o
 dht_objs=dht/dht.o
