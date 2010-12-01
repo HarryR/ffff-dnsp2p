@@ -26,6 +26,7 @@ show_help( char *argv0 ) {
     fprintf(stderr, " -P <addr:port>    Listen address & port for P2P connectivity (TCP+UDP)\n");
     fprintf(stderr, " -s <file>         DB file for node state storage\n");
     fprintf(stderr, " -p <file>         DB file for persistent publish storage\n");
+    fprintf(stderr, " -n <file>         Peers file\n");
     fprintf(stderr, " -h                Show this help\n");
 }
 
@@ -41,7 +42,7 @@ main(int argc, char** argv) {
     // TODO: find unused local port for P2P listen, and set using f4_set_listen_p2p
 
     int ch;
-    while( (ch = getopt(argc, argv, "D:A:P:s:p:h")) != -1 ) {
+    while( (ch = getopt(argc, argv, "D:A:P:s:p:n:h")) != -1 ) {
         switch(ch) {
         case 'D':
             f4_set_listen_dns(ctx, optarg);
@@ -60,6 +61,10 @@ main(int argc, char** argv) {
 
         case 'p':
             f4_set_publish_db_file(ctx, optarg);
+            break;
+
+        case 'n':
+            f4_set_peers_file(ctx, optarg);
             break;
 
         case 'h':
