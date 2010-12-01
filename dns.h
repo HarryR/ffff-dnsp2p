@@ -9,6 +9,8 @@
 struct f4dns_ctx {
     struct evdns_base *dns_base;
     f4_ctx_t *f4;
+    evutil_socket_t sock;
+    struct evdns_server_port *server;
 };
 typedef struct f4dns_ctx f4dns_ctx_t;
 
