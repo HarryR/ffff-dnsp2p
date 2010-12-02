@@ -7,14 +7,15 @@
 
 SYS:=$(shell uname -s)
 
-CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
 CFLAGS+=-Wall -Wextra -std=gnu99 
 ifeq ($(SYS),Darwin)
 CFLAGS+=-fnested-functions
 CFLAGS=-I/opt/local/include/ -I../libevent-2.0.9-rc/include
 LDFLAGS=-L/opt/local/lib -L../libevent-2.0.9-rc/lib
-endif
+else
+CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
 LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib
+endif
 LIBS=-lgcrypt -levent -ltokyocabinet
 
 libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o
@@ -29,9 +30,7 @@ libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs)
 
 dnsp2p.exe: $(dnsp2p_objs) libffff.a
 	$(CC) -o $@ $(LDFLAGS) $+ $(LIBS)
-# Fix up the linkage to libevent, since I've refrained from installing it in /usr/local/lib
 ifeq ($(SYS),Darwin)
-
 	install_name_tool -change /usr/local/lib/libevent-2.0.5.dylib \
 	../libevent-2.0.9-rc/lib/libevent.dylib dnsp2p.exe
 endif
