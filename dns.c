@@ -39,7 +39,7 @@ f4dns_new(f4_ctx_t *f4_ctx) {
 static void 
 _f4dns_cb_dnsserver(struct evdns_server_request *req, void *_ctx) {
     assert( _ctx != NULL );
-    f4dns_ctx_t *ctx = (f4dns_ctx_t *)ctx;
+    f4dns_ctx_t *ctx = (f4dns_ctx_t *)_ctx;
     int i;
 
     for( i = 0; i < req->nquestions; i++ ) {
