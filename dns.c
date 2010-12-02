@@ -30,7 +30,6 @@ f4dns_hash( const char *request_type, const char *fqn, char *hash_return ) {
 f4dns_ctx_t *
 f4dns_new(f4_ctx_t *f4_ctx) {
     f4dns_ctx_t *ctx = (f4dns_ctx_t *)calloc(sizeof(f4dns_ctx_t), 1);
-    memset(ctx, 0, sizeof(f4dns_ctx_t));
     ctx->f4 = f4_ctx;
     ctx->sock = -1;
     return ctx;

@@ -22,7 +22,6 @@ f4_ctx_t *
 f4_new( void ) {
     f4_ctx_t *ctx = calloc(sizeof(f4_ctx_t),1);
     assert( ctx != NULL );
-    memset(ctx, 0, sizeof(f4_ctx_t));  
     ctx->socket_p2p_app = -1;
     ctx->socket_p2p_dht = -1;
     return ctx;
