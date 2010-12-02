@@ -26,7 +26,7 @@ show_help( char *argv0 ) {
     fprintf(stderr, " -P <addr:port>    Listen address & port for P2P connectivity (TCP+UDP)\n");
     fprintf(stderr, " -s <file>         DB file for node state storage\n");
     fprintf(stderr, " -p <file>         DB file for persistent publish storage\n");
-    fprintf(stderr, " -n <file>         Properties file for peer list\n");
+    fprintf(stderr, " -b <file>         Peer list bootstrap file\n");
     fprintf(stderr, " -h                Show this help\n");
 }
 
