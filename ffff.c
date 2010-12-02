@@ -193,15 +193,17 @@ dht_hash(void *hash_return, int hash_size,
 
 static void
 f4_cb_dht(void *_ctx, int event,
-             unsigned char *info_hash,
+             char *info_hash,
              void *data, size_t data_len)
 {
-    f4_ctx_t *ctx = (f4_ctx_t*)ctx;
+    f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
+    f4op_t *op = f4op_find(ctx->op_ctx, info_hash);
 
-    // TODO: match info_hash to a pending DNS query/share operation
-    // We can then create a connection to the nodes given in 'data' to complete
-    // the operation.
-    assert( false );
+    if( op ) {
+        op->dht_callback(ctx, op, event, data, data_len);
+    }
+
+    // TODO: log that we have a DHT event for an unknown operation!
 }
 
 static void
@@ -297,8 +299,9 @@ f4_init(f4_ctx_t *ctx) {
 
     ctx->db = tctdbnew();
     assert( ctx->db != NULL );
+    assert( ctx->db_file != NULL );
     if( ! tctdbopen(ctx->db, ctx->db_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
-        f4_log(ctx, "Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
+        f4_log(ctx, "Couldn't open status DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
         ctx->errno = F4_ERR_CANT_OPEN_DB;
         return false;
     }

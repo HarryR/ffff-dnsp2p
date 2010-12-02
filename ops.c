@@ -26,7 +26,7 @@ f4op_add( f4op_ctx_t *ctx, f4op_t *op ) {
     while( *p ) {
         int comp;
         parent = *p;
-        found_op = rb_entry(parent, f4op_t, node);
+        found_op = (f4op_t*)parent;
         comp = memcmp(op->id, found_op->id, 20);
         if( comp < 0 )  {
             p = &(*p)->rb_left;
@@ -56,7 +56,7 @@ f4op_find( f4op_ctx_t *ctx, const char *id ) {
 
     while( n ) {
         int comp;
-        op = rb_entry(n, f4op_t, node);
+        op = (f4op_t*)n;
         comp = memcmp(id, op->id, 20);
         if( comp <  0 ) {
             n = n->rb_left;
@@ -78,7 +78,7 @@ f4op_free_ctx( f4op_ctx_t *ctx ) {
 
     p = rb_first(&ctx->ops);
     while( p ) {
-        op = rb_entry(p, f4op_t, node);
+        op = (f4op_t*)p;
         tmp = p;
         p = rb_next(tmp);
 

@@ -32,3 +32,7 @@ clean:
 	-rm -f *.a
 	-rm -f *.o
 	-rm -f dnsp2p
+	
+distclean:
+	-rm -f CMakeCache.txt
+	-rm -f CMakeFiles
