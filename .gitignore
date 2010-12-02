@@ -1,3 +1,7 @@
+*.o
+*.a
+*.db
+dnsp2p
 CMakeFiles
 cmake_install.cmake
 CmakeCache.txt
