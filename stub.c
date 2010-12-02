@@ -42,13 +42,13 @@ main(int argc, char** argv) {
 
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
     if (gcry_err_code(err)) {
-      fprintf(stderr, "Cannot enable gcrypt's secure memory management\n");
+      LOG("Cannot enable gcrypt's secure memory management\n");
       exit(EXIT_FAILURE);
     }
 
     err = gcry_control(GCRYCTL_USE_SECURE_RNDPOOL, 1);
     if (gcry_err_code(err)) {
-      fprintf(stderr, "Cannot enable gcrypt's secure random number generator\n");
+      LOG("Cannot enable gcrypt's secure random number generator\n");
       exit(EXIT_FAILURE);
     }
 

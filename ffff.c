@@ -287,7 +287,7 @@ f4_init(f4_ctx_t *ctx) {
     ctx->db = tctdbnew();
     assert( ctx->db != NULL );
     if( ! tctdbopen(ctx->db, ctx->db_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
-        fprintf(stderr, "Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
+        LOG("Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
         ctx->errno = F4_ERR_CANT_OPEN_DB;
         return false;
     }
@@ -296,7 +296,7 @@ f4_init(f4_ctx_t *ctx) {
         ctx->publish_db = tctdbnew();
         assert( ctx->publish_db != NULL );
         if( ! tctdbopen(ctx->publish_db, ctx->publish_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
-            fprintf(stderr, "Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->publish_db)));
+            LOG("Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->publish_db)));
             ctx->errno = F4_ERR_CANT_OPEN_PUBLISH_DB;
             return false;
         }
