@@ -13,3 +13,6 @@ seccure/seccure-veridec
 seccure/seccure-verify
 *.exe
 dnsp2p
+CMakeFiles
+cmake_install.cmake
+CmakeCache.txt
