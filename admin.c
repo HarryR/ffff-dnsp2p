@@ -10,7 +10,6 @@ f4admin_new( f4_ctx_t *f4_ctx ) {
     assert( f4_ctx != NULL );
 
     f4admin_ctx_t *ctx = (f4admin_ctx_t *)calloc(sizeof(f4admin_ctx_t),1);
-    memset(ctx, 0, sizeof(f4admin_ctx_t));
     ctx->f4 = f4_ctx;
     return ctx;
 }

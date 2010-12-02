@@ -7,7 +7,6 @@ f4op_ctx_t *
 f4op_new_ctx( f4_ctx_t *f4_ctx ) {
     assert( f4_ctx != NULL );
     f4op_ctx_t *ctx = (f4op_ctx_t *)calloc(sizeof(f4op_ctx_t), 1);
-    memset(ctx, 0, sizeof(f4op_ctx_t));
     ctx->ops.rb_node = NULL;
     return ctx;
 }
