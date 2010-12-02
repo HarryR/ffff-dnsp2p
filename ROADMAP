@@ -1,4 +1,4 @@
 TODO LIST:
- - Standard logging method instead of fprintf(stderr, ...)
- - Allow specifying multiple DNS and P2P listen addresses
- - Integrate UPnP library to allow ingres traffic for P2P ports
+ [X] Standard logging method instead of fprintf(stderr, ...)
+ [] Allow specifying multiple DNS and P2P listen addresses
+ [] Integrate UPnP library to allow ingres traffic for P2P ports
