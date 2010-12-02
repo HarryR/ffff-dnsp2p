@@ -18,6 +18,15 @@
 #include <event2/keyvalq_struct.h>
 #include "ops.h"
 
+int f4_log(f4_ctx_t *ctx, const char *fmt, ...) {
+    va_list ap;
+    int ret;
+    va_start(ap, fmt);
+    ret = vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
 f4_ctx_t *
 f4_new( void ) {
     f4_ctx_t *ctx = calloc(sizeof(f4_ctx_t),1);
@@ -287,7 +296,7 @@ f4_init(f4_ctx_t *ctx) {
     ctx->db = tctdbnew();
     assert( ctx->db != NULL );
     if( ! tctdbopen(ctx->db, ctx->db_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
-        LOG("Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
+        f4_log(ctx, "Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
         ctx->errno = F4_ERR_CANT_OPEN_DB;
         return false;
     }
@@ -296,7 +305,7 @@ f4_init(f4_ctx_t *ctx) {
         ctx->publish_db = tctdbnew();
         assert( ctx->publish_db != NULL );
         if( ! tctdbopen(ctx->publish_db, ctx->publish_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
-            LOG("Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->publish_db)));
+            f4_log(ctx, "Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->publish_db)));
             ctx->errno = F4_ERR_CANT_OPEN_PUBLISH_DB;
             return false;
         }

@@ -3,6 +3,7 @@
 
 #include <tcutil.h>
 #include <tctdb.h>
+#include <stdarg.h>
 #include <event2/util.h>
 #include <event2/dns.h>
 #include <event2/http.h>
@@ -85,6 +86,8 @@ void f4_set_peers_file(f4_ctx_t *ctx, const char *peers_file);
 int f4_set_listen_dns(f4_ctx_t *ctx, const char *what);
 int f4_set_listen_p2p(f4_ctx_t *ctx, const char *what);
 int f4_set_listen_admin(f4_ctx_t *ctx, const char *what);
+
+int f4_log(f4_ctx_t *ctx, const char *fmt, ...);
 
 /**
  * Initialize context, opening any sockets, database files etc.

@@ -1,0 +1,15 @@
+.dep.inc
+*.o
+*.a
+Makefile-DNS-P2P-panda.mk
+nbproject/
+seccure/seccure-decrypt
+seccure/seccure-dh
+seccure/seccure-encrypt
+seccure/seccure-key
+seccure/seccure-sign
+seccure/seccure-signcrypt
+seccure/seccure-veridec
+seccure/seccure-verify
+*.exe
+dnsp2p
