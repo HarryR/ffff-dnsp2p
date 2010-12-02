@@ -10,7 +10,7 @@ struct f4op_get {
 };
 typedef struct f4op_get f4op_get_t;
 
-f4op_t *f4op_get_new(f4op_t *op, struct evdns_server_request *req);
+f4op_t *f4op_get_new(f4op_t *op);
 
 void f4op_get_free(f4op_t *op);
 

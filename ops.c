@@ -98,10 +98,11 @@ f4op_new( f4op_ctx_t *ctx, uint8_t mode, const char *id ) {
     memcpy(op->id, id, 20);
 
     if( mode == F4OP_MODE_GET ) {
-
+        f4op_get_new(op);
     }
     else if( mode == F4OP_MODE_PUT ) {
-
+        // TODO: implement me
+        assert( false );
     }
     else {
         assert( false );
