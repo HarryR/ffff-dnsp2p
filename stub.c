@@ -37,7 +37,7 @@ main(int argc, char** argv) {
     struct event_base *base;
     base = event_base_new();
     ctx = f4_new();
-    int ret = EXIT_SUCCESS;
+    int ret = EXIT_FAILURE;
     bool should_show_help = (argc == 1);
 
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
@@ -53,9 +53,12 @@ main(int argc, char** argv) {
     }
 
     // TODO: find unused local port for P2P listen, and set using f4_set_listen_p2p
+    // Setup some reasonable defaults
+    f4_set_listen_p2p(ctx, "[::]:14010");
+    f4_set_listen_admin(ctx, "[::]:14040");
 
     int ch;
-    while( (ch = getopt(argc, argv, "D:A:P:s:p:n:h")) != -1 ) {
+    while( (ch = getopt(argc, argv, "D:A:P:s:p:b:h")) != -1 ) {
         switch(ch) {
         case 'D':
             f4_set_listen_dns(ctx, optarg);
@@ -76,7 +79,7 @@ main(int argc, char** argv) {
             f4_set_publish_db_file(ctx, optarg);
             break;
 
-        case 'n':
+        case 'b':
             f4_set_peers_file(ctx, optarg);
             break;
 
@@ -84,6 +87,16 @@ main(int argc, char** argv) {
             should_show_help = true;
             break;
         }
+    }
+
+    if( ! ctx->db_file ) {
+        fprintf(stderr, "Error: must specify status database file, with -s\n");
+        should_show_help = true;
+    }
+
+    if( ! ctx->peers_file ) {
+        fprintf(stderr, "Error: must specify bootstrap peers file, with -b\n");
+        should_show_help = true;
     }
 
     if( ! should_show_help ) {

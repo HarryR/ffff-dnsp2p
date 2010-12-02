@@ -11,12 +11,13 @@ f4dns_hash( const char *request_type, const char *fqn, char *hash_return ) {
     gcry_error_t err;
     gcry_md_hd_t mh;
     char *md;
+    const char prefix[] = "F4DNS::";
 
     err = gcry_md_open(&mh, GCRY_MD_SHA1, GCRY_MD_FLAG_SECURE);
     assert( ! gcry_err_code(err) );
 
-    gcry_md_write(mh, "F4DNS", strlen("F4DNS"));
-    gcry_md_write(mh, request_type, strlen(request_type));
+    gcry_md_write(mh, prefix, sizeof(prefix));
+    //gcry_md_write(mh, request_type, strlen(request_type));
     gcry_md_write(mh, fqn, strlen(fqn));
 
     gcry_md_final(mh);

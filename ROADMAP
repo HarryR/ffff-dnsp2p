@@ -1,4 +1,7 @@
 TODO LIST:
  [X] Standard logging method instead of fprintf(stderr, ...)
- [] Allow specifying multiple DNS and P2P listen addresses
- [] Integrate UPnP library to allow ingres traffic for P2P ports
+ [ ] Allow specifying multiple DNS and P2P listen addresses
+ [ ] Integrate UPnP library to allow ingres traffic for P2P ports
+ [ ] Split port binding out into separate init step
+ [ ] setuid to user (after port bind) if specified
+ [ ] fork/daemonize after init by default

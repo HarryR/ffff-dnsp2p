@@ -17,6 +17,8 @@ struct f4op {
     uint8_t mode;
     char *type;
     char *fqn;
+    void *data;
+    void (*dht_callback)(f4_ctx_t* ctx, struct f4op *op, int event, void *data, size_t data_len);
 };
 typedef struct f4op f4op_t;
 
