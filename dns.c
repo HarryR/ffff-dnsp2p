@@ -1,5 +1,6 @@
 #include "dns.h"
 #include "ops.h"
+#include "op_get.h"
 
 #include <assert.h>
 #include <gcrypt.h>
@@ -86,14 +87,17 @@ _f4dns_cb_dnsserver(struct evdns_server_request *req, void *_ctx) {
         f4op_t *op = f4op_new(ctx->f4->op_ctx, F4OP_MODE_GET, op_id);
         op->type = strdup(r_type);
         op->fqn = strdup(r_fqdn);
-        f4op_add(ctx->f4->op_ctx, op);
 
-        // TODO: add callbacks into f4op_t so it can start the resolv process
-        // This will start a DHT search
+        if( ! f4op_get_new(op, req) ) {
+            f4_log(ctx->f4, "XXX: Couldn't initialize op!");
+            assert( false );
+            f4op_free(ctx->f4->op_ctx, op);
+            evdns_server_request_respond(req, 0);
+        }
+        else {
+            f4op_add(ctx->f4->op_ctx, op);
+        }
     }
-
-    // XXX: for now just reply
-    evdns_server_request_respond(req, 0);
 }
 
 bool

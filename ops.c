@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "ops.h"
+#include "op_get.h"
 
 f4op_ctx_t *
 f4op_new_ctx( f4_ctx_t *f4_ctx ) {
@@ -95,6 +96,19 @@ f4op_new( f4op_ctx_t *ctx, uint8_t mode, const char *id ) {
     f4op_t *op = (f4op_t*)calloc(sizeof(f4op_t),1);
     op->mode = mode;
     memcpy(op->id, id, 20);
+
+    if( mode == F4OP_MODE_GET ) {
+
+    }
+    else if( mode == F4OP_MODE_PUT ) {
+
+    }
+    else {
+        assert( false );
+        free(op);
+        return NULL;
+    }
+
     return op;
 }
 
