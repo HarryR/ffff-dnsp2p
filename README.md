@@ -10,5 +10,13 @@ Here is a timeline of events as they are unfolding at the moment:
 
 - Peter Sunde via Twitter @brokep on 30 November 2010 08:00 AM
 
-### Give me more
+## Building
+Old build system is make, supported by original developers..
+    make
+
+New hotness is scons, supported by me.  Makes things easier.
+    scons -j4
+
+
+## Give me more
 More information at [the wiki](http://dot-p2p.org/index.php?title=Main_Page)
