@@ -1,6 +1,6 @@
 #
 # Franky - fuck all the discussion
-# Fuck everybody who thinks this will somebody work with a central authority
+# Fuck everybody who thinks this will someday work with a central authority
 # Fuck all the non-coders who haven't got a clue
 # Fuck all the geeks who do nothing but quibble
 # I present: FFFF-dnsp2p
