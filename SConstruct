@@ -32,16 +32,14 @@ elif re.search("BSD", sys):
     })
     env.Append(CFLAGS=["-ggdb3"])
 
-Export('env')
-SConscript('#seccure/SConscript')
-
 libffff_objs = Split("""
-    ffff.o
-    properties.o
-    admin.o
-    dns.o
-    rbtree.o
-    ops.o
+    ffff.c
+    properties.c
+    admin.c
+    dns.c
+    rbtree.c
+    ops.c
+    op_get.c
 """)
 seccure_objs = Split("""
     seccure/curves.o
@@ -65,5 +63,8 @@ if not conf.CheckLib('event') or not conf.CheckFunc('evdns_base_new'):
         Exit(1)
 conf.Finish()
 
+Export('env')
+SConscript('#seccure/SConscript')
+
 env.StaticLibrary('ffff', [libffff_objs, seccure_objs, dht_objs])
-env.Program('dnsp2p', ['stub.o', 'libffff.a'])
+env.Program('dnsp2p', ['stub.c', 'libffff.a'])

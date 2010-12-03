@@ -18,20 +18,6 @@ def MakeHardLink(target, source, env):
 bldr = Builder(action=MakeHardLink)
 env.Append( BUILDERS = {'MakeHardLink' : bldr } )
 
-# doc: seccure.1 seccure.1.html
-
-#install: default
-#	install -m0755 seccure-key $(DESTDIR)/usr/bin
-#	ln -f $(DESTDIR)/usr/bin/seccure-key $(DESTDIR)/usr/bin/seccure-encrypt
-#	ln -f $(DESTDIR)/usr/bin/seccure-key $(DESTDIR)/usr/bin/seccure-decrypt
-#	ln -f $(DESTDIR)/usr/bin/seccure-key $(DESTDIR)/usr/bin/seccure-sign
-#	ln -f $(DESTDIR)/usr/bin/seccure-key $(DESTDIR)/usr/bin/seccure-verify
-#	ln -f $(DESTDIR)/usr/bin/seccure-key $(DESTDIR)/usr/bin/seccure-signcrypt
-#	ln -f $(DESTDIR)/usr/bin/seccure-key $(DESTDIR)/usr/bin/seccure-veridec
-#	ln -f $(DESTDIR)/usr/bin/seccure-key $(DESTDIR)/usr/bin/seccure-dh
-#	install -m0644 seccure.1 $(DESTDIR)/usr/share/man/man1
-
-
 env.Program('seccure-key', Split("""
         seccure.c
         numtheory.c

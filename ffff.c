@@ -20,6 +20,7 @@
 #include <event2/keyvalq_struct.h>
 #include "ops.h"
 
+// XXX: Unused parameter ctx - there for future use?
 int f4_log(f4_ctx_t *ctx, const char *fmt, ...) {
     va_list ap;
     int ret;
