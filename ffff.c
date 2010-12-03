@@ -56,8 +56,8 @@ void
 f4_set_peers_file(f4_ctx_t *ctx, const char *peers_file) {
     assert( peers_file != NULL );
     assert( strlen(peers_file) );
-    if( ctx->peers_file ) free(ctx->peers_file);
-    ctx->peers_file = strdup(peers_file);
+    if( ctx->bootstrap_file ) free(ctx->bootstrap_file);
+    ctx->bootstrap_file = strdup(peers_file);
 }
 
 void f4_set_publish_db_file(f4_ctx_t *ctx, const char *publish_db_file) {
@@ -92,12 +92,12 @@ int f4_set_listen_admin(f4_ctx_t *ctx, const char *what) {
 
 static void
 f4_init_peer_from_sockaddr( f4_ctx_t *ctx, struct sockaddr *addr, int addr_sz ) {
-    ctx->peers_count++;
-    ctx->peers = realloc(ctx->peers, sizeof(struct _f4_peer) * ctx->peers_count);
-    assert( ctx->peers != NULL );
+    ctx->bootstraps_count++;
+    ctx->bootstraps = realloc(ctx->bootstraps, sizeof(struct _f4_peer) * ctx->bootstraps_count);
+    assert( ctx->bootstraps != NULL );
     
-    memcpy(&ctx->peers[ctx->peers_count - 1].addr, addr, addr_sz);
-    ctx->peers[ctx->peers_count - 1].addr_sz = addr_sz;
+    memcpy(&ctx->bootstraps[ctx->bootstraps_count - 1].addr, addr, addr_sz);
+    ctx->bootstraps[ctx->bootstraps_count - 1].addr_sz = addr_sz;
 }
 
 static void
@@ -138,8 +138,8 @@ f4_init_peers( f4_ctx_t *ctx ) {
     size_t invalid_count = 0;
     
     TAILQ_INIT(&peers);
-    assert( ctx->peers_file != NULL );
-    fh = fopen(ctx->peers_file, "r");
+    assert( ctx->bootstrap_file != NULL );
+    fh = fopen(ctx->bootstrap_file, "r");
     if( ! fh ) {
         perror("Couldn't open peers file!");
         return false;
@@ -219,7 +219,7 @@ static void
 f4_cb_dht_read( evutil_socket_t s, short event, void *_ctx ) {
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
     time_t tosleep;
-    dht_periodic(event == EV_WRITE, &tosleep, f4_cb_dht, ctx);
+    dht_periodic(event == EV_READ, &tosleep, f4_cb_dht, ctx);
 }
 
 static bool
@@ -253,7 +253,7 @@ f4_init_p2p( f4_ctx_t *ctx ) {
     if( ctx->listen_p2p.ss_family == AF_INET6 ) {
         socket_v6_only( ctx->socket_p2p_dht );
     }
-    evutil_make_socket_nonblocking(ctx->socket_p2p_dht);
+    //evutil_make_socket_nonblocking(ctx->socket_p2p_dht);
     if( ! listen(ctx->socket_p2p_dht, 10) ) {
         perror("Cannot listen() p2p dht");
         ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
@@ -285,6 +285,7 @@ f4_init_p2p( f4_ctx_t *ctx ) {
 
     // XXX: dht isn't fully integrated with libevent
     ctx->socket_p2p_dht_event = event_new(ctx->base, ctx->socket_p2p_dht, EV_READ | EV_PERSIST, f4_cb_dht_read, ctx);
+    assert( ctx->socket_p2p_dht_event != NULL );
     event_add(ctx->socket_p2p_dht_event, NULL);
 
     return true;
@@ -295,7 +296,7 @@ f4_init_crypto(f4_ctx_t *ctx) {
     struct affine_point private_P;
     gcry_mpi_t private_d;
 
-    ctx->cp = curve_by_pk_len_compact(20);
+    ctx->cp = curve_by_name("p160");
     assert( ctx->cp != NULL );
 
     gcry_randomize(&ctx->private_key[0], sizeof(ctx->private_key), GCRY_STRONG_RANDOM);
@@ -305,6 +306,24 @@ f4_init_crypto(f4_ctx_t *ctx) {
 
     compress_to_string(ctx->public_key, DF_BIN, &private_P, ctx->cp);
     point_release(&private_P);
+}
+
+void
+f4_start(f4_ctx_t *ctx) {
+    size_t i;
+    struct _f4_peer *boot;
+    
+    ctx->is_running = true;
+
+    for( i = 0; i < ctx->bootstraps_count; i++ ) {
+        boot = &ctx->bootstraps[i];
+        dht_ping_node((struct sockaddr*)&boot->addr, boot->addr_sz);
+    }
+}
+
+void
+f4_stop(f4_ctx_t *ctx) {
+    ctx->is_running = false;
 }
 
 bool
@@ -333,7 +352,7 @@ f4_init(f4_ctx_t *ctx) {
     ctx->op_ctx = f4op_new_ctx(ctx);
     f4op_init_ctx(ctx->op_ctx);
 
-    if( ! f4_init_peers(ctx) )  {
+    if( ctx->bootstrap_file && ! f4_init_peers(ctx) )  {
         ctx->errno = F4_ERR_CANT_INIT_PEERS;
         return false;
     }
@@ -379,8 +398,8 @@ void f4_free( f4_ctx_t *ctx ) {
     if( ctx->socket_p2p_app != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_app);
     if( ctx->socket_p2p_dht != -1 ) EVUTIL_CLOSESOCKET(ctx->socket_p2p_dht);
 
-    if( ctx->peers ) free(ctx->peers);
-    if( ctx->peers_file ) free(ctx->peers_file);
+    if( ctx->bootstraps ) free(ctx->bootstraps);
+    if( ctx->bootstrap_file ) free(ctx->bootstrap_file);
     if( ctx->db_file ) free(ctx->db_file);
     if( ctx->publish_db ) tctdbdel(ctx->publish_db);
     if( ctx->db ) tctdbdel(ctx->db);
