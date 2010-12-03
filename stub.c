@@ -5,6 +5,7 @@
 #include <event2/event.h>
 #include <unistd.h>
 #include <libgen.h>
+#include "admin.h"
 
 static int
 run_stuff( f4_ctx_t* ctx ) {

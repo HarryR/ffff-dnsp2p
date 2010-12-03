@@ -8,11 +8,15 @@
 SYS:=$(shell uname -s)
 
 CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
-CFLAGS+=-Wall -Wextra -std=gnu99
+CFLAGS+=-Wall -Wextra -std=gnu99 
 ifeq ($(SYS),Darwin)
 CFLAGS+=-fnested-functions
-endif
+CFLAGS=-I/opt/local/include/ -I../libevent-2.0.9-rc/include
+LDFLAGS=-L/opt/local/lib -L../libevent-2.0.9-rc/lib
+else
+CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
 LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib
+endif
 LIBS=-lgcrypt -levent -ltokyocabinet
 
 libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o op_get.o
@@ -27,6 +31,10 @@ libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs)
 
 dnsp2p.exe: $(dnsp2p_objs) libffff.a
 	$(CC) -o $@ $(LDFLAGS) $+ $(LIBS)
+ifeq ($(SYS),Darwin)
+	install_name_tool -change /usr/local/lib/libevent-2.0.5.dylib \
+	../libevent-2.0.9-rc/lib/libevent.dylib dnsp2p.exe
+endif
 
 clean:
 	-rm -f *.a
