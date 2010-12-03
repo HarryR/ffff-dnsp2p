@@ -15,7 +15,7 @@ endif
 LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L/usr/local/lib
 LIBS=-lgcrypt -levent -ltokyocabinet
 
-libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o
+libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o op_get.o
 dnsp2p_objs=stub.o
 seccure_objs=seccure/curves.o seccure/serialize.o seccure/protocol.o seccure/ecc.o seccure/aes256ctr.o seccure/numtheory.o
 dht_objs=dht/dht.o

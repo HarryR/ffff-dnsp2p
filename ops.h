@@ -4,6 +4,7 @@
 #include "rbtree.h"
 #include "ffff.h"
 
+#include <event2/dns.h>
 #include <stdint.h>
 
 enum {
@@ -19,6 +20,7 @@ struct f4op {
     char *fqn;
     void *data;
     void (*dht_callback)(f4_ctx_t* ctx, struct f4op *op, int event, void *data, size_t data_len);
+    void (*dns_callback)(f4_ctx_t* ctx, struct f4op *op, struct evdns_server_request *req);
 };
 typedef struct f4op f4op_t;
 

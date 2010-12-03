@@ -22,7 +22,7 @@ typedef struct f4dns_ctx f4dns_ctx_t;
  * @param hash_return pointer to a 20 byte char array
  * @return hash_return
  */
-char *f4dns_hash( const char *request_type, const char *fqn, char *hash_return );
+char *f4dns_hash( const char *fqn, char *hash_return );
 f4dns_ctx_t *f4dns_new(f4_ctx_t *f4_ctx);
 bool f4dns_init(f4dns_ctx_t *ctx);
 void f4dns_free(f4dns_ctx_t *ctx);

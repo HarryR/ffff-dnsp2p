@@ -1,5 +1,6 @@
 #include "dns.h"
 #include "ops.h"
+#include "op_get.h"
 
 #include <assert.h>
 #include <gcrypt.h>
@@ -7,7 +8,7 @@
 #include <event2/dns_struct.h>
 
 char *
-f4dns_hash( const char *request_type, const char *fqn, char *hash_return ) {
+f4dns_hash( const char *fqn, char *hash_return ) {
     gcry_error_t err;
     gcry_md_hd_t mh;
     char *md;
@@ -82,18 +83,22 @@ _f4dns_cb_dnsserver(struct evdns_server_request *req, void *_ctx) {
             break;
         }
 
-        f4dns_hash(r_type, r_fqdn, op_id);
+        f4dns_hash(r_fqdn, op_id);
         f4op_t *op = f4op_new(ctx->f4->op_ctx, F4OP_MODE_GET, op_id);
-        op->type = strdup(r_type);
-        op->fqn = strdup(r_fqdn);
-        f4op_add(ctx->f4->op_ctx, op);
-
-        // TODO: add callbacks into f4op_t so it can start the resolv process
-        // This will start a DHT search
+        if( ! op ) {
+            f4_log(ctx->f4, "XXX: Couldn't initialize op!");
+            assert( false );
+            f4op_free(ctx->f4->op_ctx, op);
+            evdns_server_request_respond(req, 0);
+        }
+        else {
+            assert( op->dns_callback != NULL );
+            op->type = strdup(r_type);
+            op->fqn = strdup(r_fqdn);
+            op->dns_callback(ctx->f4->op_ctx, op, req);
+            f4op_add(ctx->f4->op_ctx, op);
+        }
     }
-
-    // XXX: for now just reply
-    evdns_server_request_respond(req, 0);
 }
 
 bool
