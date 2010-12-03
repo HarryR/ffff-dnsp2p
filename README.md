@@ -33,5 +33,31 @@ New hotness is scons, supported by me.  Makes things easier.
      -h                Show this help
 
 
-## Give me more
+### Build instructions
+
+For now you need the following libraries installed:
+
+- tokyocabinet (http://fallabs.com/tokyocabinet/), a library of routines for managing a database
+
+- libevent >= 2.0 (http://monkey.org/~provos/libevent/), a library to execute a function when a specific event occurs on a file descriptor
+
+- libgcrypt (http://www.gnupg.org/), general purpose crypto library based on the code used in GnuPG
+
+You also will require CMake build system. Quick and dirty build instructions:
+
+    mkdir build; cd build; cmake ..; make
+
+Here are some of the variables you might want to tweak:
+
+| CMAKE_BUILD_TYPE     | Debug or Release                                     |
+| CMAKE_C_FLAGS        | the flags passed to gcc                              |
+| LIBEVENT2_PREFIX,    |                                                      |
+| TOKYOCABINET_PREFIX, |                                                      |
+| GCRYPT_PREFIX        | installation prefix of dependencies, if non-standard |
+
+This can be passed to CMake as follows:
+
+    cmake .. -DCMAKE_BUILD_TYPE=Debug -DLIBEVENT2_PREFIX=/opt/libevent2/
+
+### Give me more
 More information at [the wiki](http://dot-p2p.org/index.php?title=Main_Page)
