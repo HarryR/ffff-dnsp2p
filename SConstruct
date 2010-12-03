@@ -5,21 +5,32 @@
 # Fuck all the geeks who do nothing but quibble
 # I present: FFFF-dnsp2p
 import platform
+import re
 sys = platform.system()
 
 env = Environment(
   LIBS = ['gcrypt', 'event', 'tokyocabinet']
 )
 
-env.Append(CFLAGS = "-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include -Wall -Wextra -std=gnu99",
-  LIBPATH = ["/usr/local/lib",
-             "../libevent-root/lib",
-             "../tokyocabinet-root/lib",
-             "../libgcrypt-root/lib"],
+env.Append(CPPPATH = Split("""
+        ../libevent-root/include
+        ../tokyocabinet-root/include 
+        ../libgcrypt-root/include
+    """),
+    CFLAGS = " -Wall -Wextra -std=gnu99",
+    LIBPATH = ["/usr/local/lib",
+               "../libevent-root/lib",
+               "../tokyocabinet-root/lib",
+               "../libgcrypt-root/lib"],
 )
 
 if sys == "Darwin":
     env.Append(CFLAGS=["-fnested-functions"])
+elif re.search("BSD", sys):
+    env.Append(CPPDEFINES = {
+        "HAVE_MEMMEM" : 1,
+    })
+    env.Append(CFLAGS=["-ggdb3"])
 
 Export('env')
 SConscript('#seccure/SConscript')
