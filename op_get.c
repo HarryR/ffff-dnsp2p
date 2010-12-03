@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "dht/dht.h"
 #include "op_get.h"
 #include "ops.h"
 

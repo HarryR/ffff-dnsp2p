@@ -68,20 +68,24 @@ void f4_set_publish_db_file(f4_ctx_t *ctx, const char *publish_db_file) {
 
 int
 f4_set_listen_dns(f4_ctx_t *ctx, const char *what) {
-    int o = sizeof(struct sockaddr_storage);
-    ctx->role_dns = true;
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_dns, &o);
+    int ret;
+    ctx->listen_dns_sz = sizeof(struct sockaddr_storage);
+    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_dns, &ctx->listen_dns_sz);
+    ctx->role_dns = ret == 0;
+    return ret;
 }
 
 int f4_set_listen_p2p(f4_ctx_t *ctx, const char *what) {
-    int o = sizeof(struct sockaddr_storage);
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_p2p, &o);
+    ctx->listen_p2p_sz = sizeof(struct sockaddr_storage);
+    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_p2p, &ctx->listen_p2p_sz);
 }
 
 int f4_set_listen_admin(f4_ctx_t *ctx, const char *what) {
-    int o = sizeof(struct sockaddr_storage);
-    ctx->role_admin = true;
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_admin, &o);
+    int ret;
+    ctx->listen_admin_sz = sizeof(struct sockaddr_storage);
+    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_admin, &ctx->listen_admin_sz);
+    ctx->role_admin = ret == 0;
+    return ret;
 }
 
 static void
@@ -243,9 +247,14 @@ f4_init_p2p( f4_ctx_t *ctx ) {
         socket_v6_only( ctx->socket_p2p_dht );
     }
     evutil_make_socket_nonblocking(ctx->socket_p2p_dht);
+    if( ! listen(ctx->socket_p2p_dht, 10) ) {
+        perror("Cannot listen() p2p dht");
+        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        return false;
+    }
     evutil_make_listen_socket_reuseable(ctx->socket_p2p_dht);
 
-    if( bind(ctx->socket_p2p_dht, (struct sockaddr *)&ctx->listen_p2p, sizeof(struct sockaddr_storage)) != 0 ) {
+    if( bind(ctx->socket_p2p_dht, (struct sockaddr *)&ctx->listen_p2p, ctx->listen_p2p_sz) != 0 ) {
         perror("Cannot bind() p2p dht");
         ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
         return false;

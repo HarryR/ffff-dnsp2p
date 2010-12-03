@@ -41,6 +41,7 @@ struct f4_ctx {
     /** Should be actively publish our own records? */
     bool role_p2p_publish;    
     struct sockaddr_storage listen_p2p;
+    int listen_p2p_sz;
 
     // dht related stuff
     bool dht_done_init;
@@ -52,11 +53,13 @@ struct f4_ctx {
     /** Should we act as a DNS to P2P resolver? */
     bool role_dns;
     struct sockaddr_storage listen_dns;
+    int listen_dns_sz;
     void *dns_ctx;
 
     /** Should we run an admin interface */
     bool role_admin;
     struct sockaddr_storage listen_admin;
+    int listen_admin_sz;
     void *admin_ctx;
 
     // Operations in progress

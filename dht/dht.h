@@ -20,6 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifndef DHT_DHT_H_
+#define DHT_DHT_H_
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdio.h>
+
 typedef void
 dht_callback(void *closure, int event,
              char *info_hash,
@@ -38,7 +46,7 @@ int dht_insert_node(const unsigned char *id, struct sockaddr *sa, int salen);
 int dht_ping_node(struct sockaddr *sa, int salen);
 int dht_periodic(int available, time_t *tosleep,
                  dht_callback *callback, void *closure);
-int dht_search(const unsigned char *id, int port, int af,
+int dht_search(const char *id, int port, int af,
                dht_callback *callback, void *closure);
 int dht_nodes(int af,
               int *good_return, int *dubious_return, int *cached_return,
@@ -54,3 +62,5 @@ void dht_hash(void *hash_return, int hash_size,
               const void *v2, int len2,
               const void *v3, int len3);
 int dht_random_bytes(void *buf, size_t size);
+
+#endif
