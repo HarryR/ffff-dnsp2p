@@ -10,5 +10,15 @@ Here is a timeline of events as they are unfolding at the moment:
 
 - Peter Sunde via Twitter @brokep on 30 November 2010 08:00 AM
 
+### Build instructions
+
+For now you need the following libraries installed:
+
+- tokyocabinet (http://fallabs.com/tokyocabinet/), a library of routines for managing a database
+
+- libevent >= 2.0 (http://monkey.org/~provos/libevent/), a library to execute a function when a specific event occurs on a file descriptor
+
+- libgcrypt (http://www.gnupg.org/), general purpose crypto library based on the code used in GnuPG
+
 ### Give me more
 More information at [the wiki](http://dot-p2p.org/index.php?title=Main_Page)
