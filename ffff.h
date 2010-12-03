@@ -20,6 +20,11 @@ enum {
     F4_ERR_CANT_INIT_DNS
 };
 
+struct _f4_peer {
+    struct sockaddr_storage addr;
+    int addr_sz;
+};
+
 struct f4_ctx {
     bool is_running;
     unsigned int errno;
@@ -31,7 +36,7 @@ struct f4_ctx {
 
     /** File containing initial list of peers to bootstrap our DHT */
     char *peers_file;
-    struct sockaddr_storage *peers;
+    struct _f4_peer *peers;
     size_t peers_count;
 
     /** Backend database for all published zones */
@@ -98,6 +103,7 @@ int f4_log(f4_ctx_t *ctx, const char *fmt, ...);
  * @return 1 on success
  */
 bool f4_init(f4_ctx_t *ctx);
+int f4_add_peer( f4_ctx_t *ctx, const char *host, const char *port );
 
 void f4_free( f4_ctx_t *ctx );
 
