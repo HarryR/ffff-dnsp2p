@@ -96,12 +96,14 @@ main(int argc, char** argv) {
     }
 
     if( ! ctx->peers_file ) {
-        fprintf(stderr, "Error: must specify bootstrap peers file, with -b\n");
-        should_show_help = true;
+        fprintf(stderr, "Warning: using default bootstrap peers, override with -b\n");
+        f4_add_peer(ctx, "router.bittorrent.com", "6881");
+        // TODO: check if any of the sockets AF_INET6 before adding v6 only bootstrap
+        f4_add_peer(ctx, "dht.wifi.pps.jussieu.fr", "6881");
     }
 
     if( ! should_show_help ) {
-        f4_set_event_base(ctx, base);
+        f4_set_event_base(ctx, base);       
         if( ! f4_init(ctx) ) {
             fprintf(stderr, "Couldn't fully init F4 subsystem\n");
             ret = EXIT_FAILURE;

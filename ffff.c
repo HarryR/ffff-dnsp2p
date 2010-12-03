@@ -91,16 +91,22 @@ int f4_set_listen_admin(f4_ctx_t *ctx, const char *what) {
 }
 
 static void
-f4_init_peer_from_addrinfo( f4_ctx_t *ctx, struct addrinfo *res ) {
+f4_init_peer_from_sockaddr( f4_ctx_t *ctx, struct sockaddr *addr, int addr_sz ) {
     ctx->peers_count++;
-    ctx->peers = realloc(ctx->peers, sizeof(struct sockaddr_storage) * ctx->peers_count);
+    ctx->peers = realloc(ctx->peers, sizeof(struct _f4_peer) * ctx->peers_count);
     assert( ctx->peers != NULL );
     
-    memcpy(&ctx->peers[ctx->peers_count - 1], res->ai_addr, res->ai_addrlen);
+    memcpy(&ctx->peers[ctx->peers_count - 1].addr, addr, addr_sz);
+    ctx->peers[ctx->peers_count - 1].addr_sz = addr_sz;
 }
 
-static int 
-f4_init_peer( f4_ctx_t *ctx, struct evkeyval *peer_name ) {
+static void
+f4_init_peer_from_addrinfo( f4_ctx_t *ctx, struct addrinfo *res) {
+    f4_init_peer_from_sockaddr(ctx, res->ai_addr, res->ai_addrlen);
+}
+
+int 
+f4_add_peer( f4_ctx_t *ctx, const char *host, const char *port ) {
     int error;
     struct addrinfo hints;
     struct addrinfo *res0;
@@ -110,7 +116,7 @@ f4_init_peer( f4_ctx_t *ctx, struct evkeyval *peer_name ) {
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
-    error = getaddrinfo(peer_name->key, peer_name->value, &hints, &res0);
+    error = getaddrinfo(host, port, &hints, &res0);
     if( error ) {
         perror(gai_strerror(error));
         return 1;
@@ -121,7 +127,6 @@ f4_init_peer( f4_ctx_t *ctx, struct evkeyval *peer_name ) {
     }
 
     freeaddrinfo(res0);
-
     return 0;
 }
 
@@ -148,7 +153,7 @@ f4_init_peers( f4_ctx_t *ctx ) {
     properties_parse_file(fh, &peers);    
 
     TAILQ_FOREACH(peer, &peers, next) {
-        invalid_count += f4_init_peer(ctx, peer);
+        invalid_count += f4_add_peer(ctx, peer->key, peer->value);
     }
     
     evhttp_clear_headers(&peers);
