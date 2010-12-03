@@ -109,8 +109,8 @@ f4dns_init(f4dns_ctx_t *ctx) {
     ctx->sock = socket(ctx->f4->listen_dns.ss_family, SOCK_DGRAM, 0);
     evutil_make_socket_nonblocking(ctx->sock);
 
-    if( bind(ctx->sock, (struct sockaddr*)&ctx->f4->listen_dns, sizeof(struct sockaddr_storage)) != 0 ) {
-        perror("bind()");
+    if( bind(ctx->sock, (struct sockaddr*)&ctx->f4->listen_dns, ctx->f4->listen_dns_sz) != 0 ) {
+        perror("Cannot bind() DNS socket");
         return false;
     }
 
