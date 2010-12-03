@@ -369,7 +369,7 @@ void app_encrypt(const char *pubkey)
     fprintf(stderr, "%d\n", 8 * opt_maclen); 
   }
 
-  if (strlen(pubkey) != cp->pk_len_compact)
+  if (strlen(pubkey) != (size_t)cp->pk_len_compact)
     fatal("Invalid encryption key (wrong length)");
     
   if (decompress_from_string(&P, pubkey, DF_COMPACT, cp)) {
@@ -681,7 +681,7 @@ int app_verify(const char *pubkey, const char *sig)
     fprintf(stderr, "%s\n", cp->name); 
   }
   
-  if (strlen(pubkey) != cp->pk_len_compact)
+  if (strlen(pubkey) != (size_t)cp->pk_len_compact)
     fatal("Invalid verification key (wrong length)");
   
   if (decompress_from_string(&Q, pubkey, DF_COMPACT, cp)) {
@@ -752,7 +752,7 @@ int app_verify(const char *pubkey, const char *sig)
     if (! opt_sigbin) {
       if (! sig)
 	sig = sigbuf.compact;
-      if (strlen(sig) != cp->sig_len_compact) {
+      if (strlen(sig) != (size_t)cp->sig_len_compact) {
 	print_quiet("Invalid signature (wrong length)!\n", 1);
 	goto error;
       }
@@ -812,7 +812,7 @@ void app_signcrypt(const char *pubkey)
     fprintf(stderr, "%s\n", cp_enc->name); 
   }
 
-  if (strlen(pubkey) != cp_enc->pk_len_compact)
+  if (strlen(pubkey) != (size_t)cp_enc->pk_len_compact)
     fatal("Invalid encryption key (wrong length)");
 
   if (decompress_from_string(&P, pubkey, DF_COMPACT, cp_enc)) {
@@ -918,7 +918,7 @@ int app_veridec(const char *pubkey)
     fprintf(stderr, "%s\n", cp_enc->name); 
   }
   
-  if (strlen(pubkey) != cp_sig->pk_len_compact)
+  if (strlen(pubkey) != (size_t)cp_sig->pk_len_compact)
     fatal("Invalid verification key (wrong length)");
 
   if (decompress_from_string(&Q, pubkey, DF_COMPACT, cp_sig)) {
@@ -1047,7 +1047,7 @@ void app_dh(void)
       fatal_errno("Cannot read text line", errno);
     keyB[strcspn(keyB, "\r\n")] = 0;
 
-    if (strlen(keyB) != cp->pk_len_compact)
+    if (strlen(keyB) != (size_t)cp->pk_len_compact)
       fatal("Invalid key (wrong length)");
 
     if (decompress_from_string(&B, keyB, DF_COMPACT, cp)) {
