@@ -35,9 +35,9 @@ struct f4_ctx {
     TCTDB *db;    
 
     /** File containing initial list of peers to bootstrap our DHT */
-    char *peers_file;
-    struct _f4_peer *peers;
-    size_t peers_count;
+    char *bootstrap_file;
+    struct _f4_peer *bootstraps;
+    size_t bootstraps_count;
 
     /** Backend database for all published zones */
     char *publish_file;
@@ -102,9 +102,10 @@ int f4_log(f4_ctx_t *ctx, const char *fmt, ...);
  * @param ctx
  * @return 1 on success
  */
-bool f4_init(f4_ctx_t *ctx);
+bool f4_init( f4_ctx_t *ctx );
 int f4_add_peer( f4_ctx_t *ctx, const char *host, const char *port );
-
+void f4_start( f4_ctx_t *ctx );
+void f4_stop( f4_ctx_t *ctx );
 void f4_free( f4_ctx_t *ctx );
 
 #endif

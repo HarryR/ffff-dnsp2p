@@ -8,7 +8,7 @@
 SYS:=$(shell uname -s)
 
 CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
-CFLAGS+=-Wall -Wextra -std=gnu99
+CFLAGS+=-Wall -Wextra -std=gnu99 -O0 -ggdb
 ifeq ($(SYS),Darwin)
 CFLAGS+=-fnested-functions
 endif
