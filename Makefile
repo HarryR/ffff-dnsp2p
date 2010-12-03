@@ -8,14 +8,14 @@
 SYS:=$(shell uname -s)
 
 CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
-CFLAGS+=-Wall -Wextra -std=gnu99 
+CFLAGS+=-Wall -Wextra -std=gnu99
 ifeq ($(SYS),Darwin)
 CFLAGS+=-fnested-functions
 endif
 LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib
 LIBS=-lgcrypt -levent -ltokyocabinet
 
-libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o
+libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o op_get.o
 dnsp2p_objs=stub.o
 seccure_objs=seccure/curves.o seccure/serialize.o seccure/protocol.o seccure/ecc.o seccure/aes256ctr.o seccure/numtheory.o
 dht_objs=dht/dht.o
@@ -32,3 +32,8 @@ clean:
 	-rm -f *.a
 	-rm -f *.o
 	-rm -f *.exe
+	-rm -f dht/*.o
+	
+distclean:
+	-rm -f CMakeCache.txt
+	-rm -f CMakeFiles

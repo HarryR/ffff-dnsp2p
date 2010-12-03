@@ -5,6 +5,7 @@
 #define LOG(...) fprintf (stderr, __VA_ARGS__)
 
 #include "ffff.h"
+#include <event2/http.h>
 
 struct f4admin_ctx {
     f4_ctx_t *f4;

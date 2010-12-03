@@ -3,6 +3,7 @@
 
 #include <tcutil.h>
 #include <tctdb.h>
+#include <stdarg.h>
 #include <event2/util.h>
 #include <event2/dns.h>
 #include <event2/http.h>
@@ -40,6 +41,7 @@ struct f4_ctx {
     /** Should be actively publish our own records? */
     bool role_p2p_publish;    
     struct sockaddr_storage listen_p2p;
+    int listen_p2p_sz;
 
     // dht related stuff
     bool dht_done_init;
@@ -51,11 +53,13 @@ struct f4_ctx {
     /** Should we act as a DNS to P2P resolver? */
     bool role_dns;
     struct sockaddr_storage listen_dns;
+    int listen_dns_sz;
     void *dns_ctx;
 
     /** Should we run an admin interface */
     bool role_admin;
     struct sockaddr_storage listen_admin;
+    int listen_admin_sz;
     void *admin_ctx;
 
     // Operations in progress
@@ -85,6 +89,8 @@ void f4_set_peers_file(f4_ctx_t *ctx, const char *peers_file);
 int f4_set_listen_dns(f4_ctx_t *ctx, const char *what);
 int f4_set_listen_p2p(f4_ctx_t *ctx, const char *what);
 int f4_set_listen_admin(f4_ctx_t *ctx, const char *what);
+
+int f4_log(f4_ctx_t *ctx, const char *fmt, ...);
 
 /**
  * Initialize context, opening any sockets, database files etc.

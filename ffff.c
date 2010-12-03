@@ -18,6 +18,15 @@
 #include <event2/keyvalq_struct.h>
 #include "ops.h"
 
+int f4_log(f4_ctx_t *ctx, const char *fmt, ...) {
+    va_list ap;
+    int ret;
+    va_start(ap, fmt);
+    ret = vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    return ret;
+}
+
 f4_ctx_t *
 f4_new( void ) {
     f4_ctx_t *ctx = calloc(sizeof(f4_ctx_t),1);
@@ -59,20 +68,24 @@ void f4_set_publish_db_file(f4_ctx_t *ctx, const char *publish_db_file) {
 
 int
 f4_set_listen_dns(f4_ctx_t *ctx, const char *what) {
-    int o = sizeof(struct sockaddr_storage);
-    ctx->role_dns = true;
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_dns, &o);
+    int ret;
+    ctx->listen_dns_sz = sizeof(struct sockaddr_storage);
+    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_dns, &ctx->listen_dns_sz);
+    ctx->role_dns = ret == 0;
+    return ret;
 }
 
 int f4_set_listen_p2p(f4_ctx_t *ctx, const char *what) {
-    int o = sizeof(struct sockaddr_storage);
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_p2p, &o);
+    ctx->listen_p2p_sz = sizeof(struct sockaddr_storage);
+    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_p2p, &ctx->listen_p2p_sz);
 }
 
 int f4_set_listen_admin(f4_ctx_t *ctx, const char *what) {
-    int o = sizeof(struct sockaddr_storage);
-    ctx->role_admin = true;
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_admin, &o);
+    int ret;
+    ctx->listen_admin_sz = sizeof(struct sockaddr_storage);
+    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_admin, &ctx->listen_admin_sz);
+    ctx->role_admin = ret == 0;
+    return ret;
 }
 
 static void
@@ -182,15 +195,17 @@ dht_hash(void *hash_return, int hash_size,
 
 static void
 f4_cb_dht(void *_ctx, int event,
-             unsigned char *info_hash,
+             char *info_hash,
              void *data, size_t data_len)
 {
-    f4_ctx_t *ctx = (f4_ctx_t*)ctx;
+    f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
+    f4op_t *op = f4op_find(ctx->op_ctx, info_hash);
 
-    // TODO: match info_hash to a pending DNS query/share operation
-    // We can then create a connection to the nodes given in 'data' to complete
-    // the operation.
-    assert( false );
+    if( op ) {
+        op->dht_callback(ctx, op, event, data, data_len);
+    }
+
+    // TODO: log that we have a DHT event for an unknown operation!
 }
 
 static void
@@ -232,9 +247,14 @@ f4_init_p2p( f4_ctx_t *ctx ) {
         socket_v6_only( ctx->socket_p2p_dht );
     }
     evutil_make_socket_nonblocking(ctx->socket_p2p_dht);
+    if( ! listen(ctx->socket_p2p_dht, 10) ) {
+        perror("Cannot listen() p2p dht");
+        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        return false;
+    }
     evutil_make_listen_socket_reuseable(ctx->socket_p2p_dht);
 
-    if( bind(ctx->socket_p2p_dht, (struct sockaddr *)&ctx->listen_p2p, sizeof(struct sockaddr_storage)) != 0 ) {
+    if( bind(ctx->socket_p2p_dht, (struct sockaddr *)&ctx->listen_p2p, ctx->listen_p2p_sz) != 0 ) {
         perror("Cannot bind() p2p dht");
         ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
         return false;
@@ -286,8 +306,9 @@ f4_init(f4_ctx_t *ctx) {
 
     ctx->db = tctdbnew();
     assert( ctx->db != NULL );
+    assert( ctx->db_file != NULL );
     if( ! tctdbopen(ctx->db, ctx->db_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
-        LOG("Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
+        f4_log(ctx, "Couldn't open status DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
         ctx->errno = F4_ERR_CANT_OPEN_DB;
         return false;
     }
@@ -296,7 +317,7 @@ f4_init(f4_ctx_t *ctx) {
         ctx->publish_db = tctdbnew();
         assert( ctx->publish_db != NULL );
         if( ! tctdbopen(ctx->publish_db, ctx->publish_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
-            LOG("Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->publish_db)));
+            f4_log(ctx, "Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->publish_db)));
             ctx->errno = F4_ERR_CANT_OPEN_PUBLISH_DB;
             return false;
         }

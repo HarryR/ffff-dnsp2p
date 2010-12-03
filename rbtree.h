@@ -118,15 +118,7 @@ struct rb_root
 	struct rb_node *rb_node;
 };
 
-// Copy from linux kernel 2.6 source (kernel.h, stddef.h)
-#define container_of(ptr, type, member) ({      \
-	const typeof( ((type *)0)->member ) *__mptr = (ptr);  \
-	(type *)( (char *)__mptr - offsetof(type,member) );})
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-
-
 #define RB_ROOT	(struct rb_root) { NULL, }
-#define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
 extern void rb_insert_color(struct rb_node *, struct rb_root *);
 extern void rb_erase(struct rb_node *, struct rb_root *);
