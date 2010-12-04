@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 typedef void
 dht_callback(void *closure, int event,
-             char *info_hash,
+             unsigned char *info_hash,
              void *data, size_t data_len);
 
 #define DHT_EVENT_NONE 0
