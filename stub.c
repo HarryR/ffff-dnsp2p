@@ -83,8 +83,7 @@ main(int argc, char** argv) {
     f4_set_listen_p2p(ctx, "[::]:14010");
     f4_set_listen_admin(ctx, "[::]:14040");
 
-    // This is set by getopt().
-    char* optarg;
+    // char* optarg; This is set by getopt().
 
     int ch;
     while( (ch = getopt(argc, argv, "D:A:P:s:p:b:h")) != -1 ) {
