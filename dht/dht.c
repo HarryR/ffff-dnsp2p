@@ -57,6 +57,9 @@ THE SOFTWARE.
 #ifdef __GLIBC__
 #define HAVE_MEMMEM
 #endif
+#if __BSD_VISIBLE
+#define HAVE_MEMMEM
+#endif
 #endif
 
 #ifndef MSG_CONFIRM
