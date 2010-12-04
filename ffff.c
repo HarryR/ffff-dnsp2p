@@ -22,6 +22,7 @@
 int f4_log(f4_ctx_t *ctx, const char *fmt, ...) {
     va_list ap;
     int ret;
+    ctx = ctx;  // avoid an "unused" warning.
     va_start(ap, fmt);
     ret = vfprintf(stderr, fmt, ap);
     va_end(ap);
@@ -201,7 +202,7 @@ dht_hash(void *hash_return, int hash_size,
 
 static void
 f4_cb_dht(void *_ctx, int event,
-             char *info_hash,
+             unsigned char *info_hash,
              void *data, size_t data_len)
 {
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
@@ -215,7 +216,8 @@ f4_cb_dht(void *_ctx, int event,
 }
 
 static void
-f4_cb_dht_read( evutil_socket_t s, short event, void *_ctx ) {
+f4_cb_dht_read(evutil_socket_t s, short event, void *_ctx ) {
+    s = s;  // avoid an "unused" warning
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
     time_t tosleep;
     dht_periodic(event == EV_READ, &tosleep, f4_cb_dht, ctx);

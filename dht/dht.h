@@ -49,7 +49,7 @@ int dht_insert_node(const unsigned char *id, struct sockaddr *sa, int salen);
 int dht_ping_node(struct sockaddr *sa, int salen);
 int dht_periodic(int available, time_t *tosleep,
                  dht_callback *callback, void *closure);
-int dht_search(const char *id, int port, int af,
+int dht_search(const unsigned char *id, int port, int af,
                dht_callback *callback, void *closure);
 int dht_nodes(int af,
               int *good_return, int *dubious_return, int *cached_return,

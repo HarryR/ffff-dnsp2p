@@ -111,7 +111,7 @@ int decompress_from_string(struct affine_point *P, const char *buf,
 			   enum disp_format df, const struct curve_params *cp)
 {
   gcry_mpi_t x;
-  int inlen = (df == DF_COMPACT) ? cp->pk_len_compact : cp->pk_len_bin;
+  unsigned inlen = (df == DF_COMPACT) ? cp->pk_len_compact : cp->pk_len_bin;
   int res;
   assert(! (df == DF_COMPACT && strlen(buf) != inlen));
   if ((res = deserialize_mpi(&x, df, buf, inlen))) {
