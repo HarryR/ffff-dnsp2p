@@ -67,23 +67,23 @@ void f4_set_publish_db_file(f4_ctx_t *ctx, const char *publish_db_file) {
 }
 
 int
-f4_set_listen_dns(f4_ctx_t *ctx, const char *what) {
+f4_set_listen_dns(f4_ctx_t *ctx, const char *address) {
     int ret;
     ctx->listen_dns_sz = sizeof(struct sockaddr_storage);
-    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_dns, &ctx->listen_dns_sz);
+    ret = evutil_parse_sockaddr_port(address, (struct sockaddr *)&ctx->listen_dns, &ctx->listen_dns_sz);
     ctx->role_dns = ret == 0;
     return ret;
 }
 
-int f4_set_listen_p2p(f4_ctx_t *ctx, const char *what) {
+int f4_set_listen_p2p(f4_ctx_t *ctx, const char *address) {
     ctx->listen_p2p_sz = sizeof(struct sockaddr_storage);
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_p2p, &ctx->listen_p2p_sz);
+    return evutil_parse_sockaddr_port(address, (struct sockaddr *)&ctx->listen_p2p, &ctx->listen_p2p_sz);
 }
 
-int f4_set_listen_admin(f4_ctx_t *ctx, const char *what) {
+int f4_set_listen_admin(f4_ctx_t *ctx, const char *address) {
     int ret;
     ctx->listen_admin_sz = sizeof(struct sockaddr_storage);
-    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_admin, &ctx->listen_admin_sz);
+    ret = evutil_parse_sockaddr_port(address, (struct sockaddr *)&ctx->listen_admin, &ctx->listen_admin_sz);
     ctx->role_admin = ret == 0;
     return ret;
 }
