@@ -1,6 +1,8 @@
 project(dnsp2p C)
 cmake_minimum_required(VERSION 2.8)
 
+include_directories(/usr/local/include third_party/include)
+
 find_library(LIBEVENT event)
 find_library(LIBTOKYOCABINET tokyocabinet)
 
