@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <string.h>
 #include <sys/queue.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h> // XXX: windows
