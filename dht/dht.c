@@ -318,7 +318,8 @@ static time_t expire_stuff_time;
 static time_t token_bucket_time;
 static int token_bucket_tokens;
 
-FILE *dht_debug = NULL;
+//FILE *dht_debug = NULL;
+#define dht_debug stderr
 
 #ifdef __GNUC__
     __attribute__ ((format (printf, 1, 2)))
@@ -361,7 +362,7 @@ is_martian(struct sockaddr *sa)
         const unsigned char *address = (const unsigned char*)&sin->sin_addr;
         return sin->sin_port == 0 ||
             (address[0] == 0) ||
-            (address[0] == 127) ||
+//            (address[0] == 127) ||
             ((address[0] & 0xE0) == 0xE0);
     }
     case AF_INET6: {
@@ -1137,7 +1138,7 @@ insert_search_bucket(struct bucket *b, struct search *sr)
 /* Start a search.  If port is non-zero, perform an announce when the
    search is complete. */
 int
-dht_search(const unsigned char *id, int port, int af,
+dht_search(const char *id, int port, int af,
            dht_callback *callback, void *closure)
 {
     struct search *sr;

@@ -3,6 +3,7 @@
 
 #include <tcutil.h>
 #include <tctdb.h>
+#include <stdarg.h>
 #include <event2/util.h>
 #include <event2/dns.h>
 #include <event2/http.h>
@@ -19,6 +20,11 @@ enum {
     F4_ERR_CANT_INIT_DNS
 };
 
+struct _f4_peer {
+    struct sockaddr_storage addr;
+    int addr_sz;
+};
+
 struct f4_ctx {
     bool is_running;
     unsigned int errno;
@@ -29,9 +35,9 @@ struct f4_ctx {
     TCTDB *db;    
 
     /** File containing initial list of peers to bootstrap our DHT */
-    char *peers_file;
-    struct sockaddr_storage *peers;
-    size_t peers_count;
+    char *bootstrap_file;
+    struct _f4_peer *bootstraps;
+    size_t bootstraps_count;
 
     /** Backend database for all published zones */
     char *publish_file;
@@ -40,6 +46,7 @@ struct f4_ctx {
     /** Should be actively publish our own records? */
     bool role_p2p_publish;    
     struct sockaddr_storage listen_p2p;
+    int listen_p2p_sz;
 
     // dht related stuff
     bool dht_done_init;
@@ -51,11 +58,13 @@ struct f4_ctx {
     /** Should we act as a DNS to P2P resolver? */
     bool role_dns;
     struct sockaddr_storage listen_dns;
+    int listen_dns_sz;
     void *dns_ctx;
 
     /** Should we run an admin interface */
     bool role_admin;
     struct sockaddr_storage listen_admin;
+    int listen_admin_sz;
     void *admin_ctx;
 
     // Operations in progress
@@ -86,13 +95,17 @@ int f4_set_listen_dns(f4_ctx_t *ctx, const char *what);
 int f4_set_listen_p2p(f4_ctx_t *ctx, const char *what);
 int f4_set_listen_admin(f4_ctx_t *ctx, const char *what);
 
+int f4_log(f4_ctx_t *ctx, const char *fmt, ...);
+
 /**
  * Initialize context, opening any sockets, database files etc.
  * @param ctx
  * @return 1 on success
  */
-bool f4_init(f4_ctx_t *ctx);
-
+bool f4_init( f4_ctx_t *ctx );
+int f4_add_peer( f4_ctx_t *ctx, const char *host, const char *port );
+void f4_start( f4_ctx_t *ctx );
+void f4_stop( f4_ctx_t *ctx );
 void f4_free( f4_ctx_t *ctx );
 
 #endif

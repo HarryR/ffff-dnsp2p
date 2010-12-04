@@ -10,7 +10,7 @@ properties_parse_line( char *line, struct evkeyvalq *output ) {
 	while( isspace(*key) ) key++;
 	if( *key == ';' ) return;
 	value = key;
-	while( isalnum(*value) || *value == '_' ) value++;
+	while( !isspace(*value) && *value != '=' ) value++;
 	while( isspace(*value) ) { *value++ = 0; };
 	if( *value != '=' ) return;
 	*value++ = 0;

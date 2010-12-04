@@ -8,10 +8,14 @@
 
 static int
 run_stuff( f4_ctx_t* ctx ) {
-    ctx->is_running = true;
+    struct timeval timeout = {5, 5000};
+    f4_start(ctx);
     while( ctx->is_running ) {
-        event_base_loop(ctx->base, EVLOOP_ONCE);
+	event_base_loopexit(ctx->base, &timeout);
+	event_base_loop(ctx->base, 0);
+        dht_dump_tables(stdout);
     }
+    f4_stop(ctx);
     return -1;
 }
 
@@ -26,7 +30,7 @@ show_help( char *argv0 ) {
     fprintf(stderr, " -P <addr:port>    Listen address & port for P2P connectivity (TCP+UDP)\n");
     fprintf(stderr, " -s <file>         DB file for node state storage\n");
     fprintf(stderr, " -p <file>         DB file for persistent publish storage\n");
-    fprintf(stderr, " -n <file>         Properties file for peer list\n");
+    fprintf(stderr, " -b <file>         Peer file containing bootstrap nodes\n");
     fprintf(stderr, " -h                Show this help\n");
 }
 
@@ -37,7 +41,7 @@ main(int argc, char** argv) {
     struct event_base *base;
     base = event_base_new();
     ctx = f4_new();
-    int ret = EXIT_SUCCESS;
+    int ret = EXIT_FAILURE;
     bool should_show_help = (argc == 1);
 
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
@@ -53,9 +57,12 @@ main(int argc, char** argv) {
     }
 
     // TODO: find unused local port for P2P listen, and set using f4_set_listen_p2p
+    // Setup some reasonable defaults
+    f4_set_listen_p2p(ctx, "[::]:14010");
+    f4_set_listen_admin(ctx, "[::]:14040");
 
     int ch;
-    while( (ch = getopt(argc, argv, "D:A:P:s:p:n:h")) != -1 ) {
+    while( (ch = getopt(argc, argv, "D:A:P:s:p:b:h")) != -1 ) {
         switch(ch) {
         case 'D':
             f4_set_listen_dns(ctx, optarg);
@@ -76,7 +83,7 @@ main(int argc, char** argv) {
             f4_set_publish_db_file(ctx, optarg);
             break;
 
-        case 'n':
+        case 'b':
             f4_set_peers_file(ctx, optarg);
             break;
 
@@ -86,8 +93,21 @@ main(int argc, char** argv) {
         }
     }
 
+    if( ! ctx->db_file ) {
+        fprintf(stderr, "Error: must specify status database file, with -s\n");
+        should_show_help = true;
+    }
+
+    if( ! ctx->bootstrap_file ) {
+        fprintf(stderr, "Warning: using default bootstrap peers, override with -b\n");
+        f4_add_peer(ctx, "router.bittorrent.com", "6881");
+        if( ctx->listen_p2p.ss_family == AF_INET6 ) {
+            f4_add_peer(ctx, "dht.wifi.pps.jussieu.fr", "6881");
+        }
+    }
+
     if( ! should_show_help ) {
-        f4_set_event_base(ctx, base);
+        f4_set_event_base(ctx, base);       
         if( ! f4_init(ctx) ) {
             fprintf(stderr, "Couldn't fully init F4 subsystem\n");
             ret = EXIT_FAILURE;
