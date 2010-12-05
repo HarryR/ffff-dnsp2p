@@ -202,7 +202,7 @@ dht_hash(void *hash_return, int hash_size,
 
 static void
 f4_cb_dht(void *_ctx, int event,
-             unsigned char *info_hash,
+             char *info_hash,
              void *data, size_t data_len)
 {
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
@@ -297,7 +297,7 @@ f4_init_crypto(f4_ctx_t *ctx) {
     struct affine_point private_P;
     gcry_mpi_t private_d;
 
-    ctx->cp = curve_by_name("p160");
+    ctx->cp = curve_by_name("p160", DF_BASE36);
     assert( ctx->cp != NULL );
 
     gcry_randomize(&ctx->private_key[0], sizeof(ctx->private_key), GCRY_STRONG_RANDOM);

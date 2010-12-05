@@ -40,6 +40,8 @@
 
 #include "ecc.h"
 
+enum disp_format { DF_BIN, DF_COMPACT, DF_BASE36 };
+
 struct curve_params {
   const char *name;
   struct domain_params dp;
@@ -49,8 +51,8 @@ struct curve_params {
   int elem_len_bin, order_len_bin;
 };
 
-struct curve_params* curve_by_name(const char *name);
-struct curve_params* curve_by_pk_len_compact(int len);
+struct curve_params* curve_by_name(const char *name, enum disp_format df);
+struct curve_params* curve_by_pk_len_compact(int len, enum disp_format df);
 void curve_release(struct curve_params *cp);
 
 #endif /* INC_CURVES_H */

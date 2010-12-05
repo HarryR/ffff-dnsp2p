@@ -18,7 +18,7 @@ For now you need the following libraries installed:
 
 - libevent >= 2.0 (http://monkey.org/~provos/libevent/), a library to execute a function when a specific event occurs on a file descriptor
 
-- libgcrypt (http://www.gnupg.org/), general purpose crypto library based on the code used in GnuPG
+- libgcrypt >= 1.4.1 (http://www.gnupg.org/), general purpose crypto library based on the code used in GnuPG
 
 You also will require CMake build system. Quick and dirty build instructions:
 

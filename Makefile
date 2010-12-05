@@ -9,11 +9,13 @@ SYS:=$(shell uname -s)
 
 CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
 CFLAGS+=-Wall -Wextra -std=gnu99 -O0 -ggdb
+
+LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib
+LIBS=-lgcrypt -levent -ltokyocabinet
+
 ifeq ($(SYS),Darwin)
 CFLAGS+=-fnested-functions
 endif
-LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib
-LIBS=-lgcrypt -levent -ltokyocabinet
 
 libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o op_get.o
 dnsp2p_objs=stub.o
