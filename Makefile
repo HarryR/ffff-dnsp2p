@@ -1,13 +1,13 @@
 #
 # Franky - fuck all the discussion
-# Fuck everybody who thinks this will someday work with a central authority
+# Fuck everybody who thinks this will somebody work with a central authority
 # Fuck all the non-coders who haven't got a clue
 # Fuck all the geeks who do nothing but quibble
 # I present: FFFF-dnsp2p
 
 SYS:=$(shell uname -s)
 
-CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I/usr/local/include
+CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I/usr/local/include -DHAVE_MEMMEM
 CFLAGS+=-Wall -Wextra -std=gnu99 -ggdb3
 ifeq ($(SYS),Darwin)
 CFLAGS+=-fnested-functions
@@ -27,17 +27,12 @@ libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs)
 
 dnsp2p: $(dnsp2p_objs) libffff.a
 	$(CC) -o $@ $(LDFLAGS) $+ $(LIBS)
-ifeq ($(SYS),Darwin)
-	install_name_tool -change /usr/local/lib/libevent-2.0.5.dylib \
-	../libevent-2.0.9-rc/lib/libevent.dylib dnsp2p.exe
-endif
 
 clean:
 	-rm -f *.a
 	-rm -f *.o
-	-rm -f *.exe
-	-rm -f dht/*.o
 	-rm -f dnsp2p
+	-rm -f dht/*.o
 	
 distclean:
 	-rm -f CMakeCache.txt
