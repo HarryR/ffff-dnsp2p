@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 typedef void
 dht_callback(void *closure, int event,
-             char *info_hash,
+             unsigned char *info_hash,
              void *data, size_t data_len);
 
 #define DHT_EVENT_NONE 0
@@ -41,12 +41,15 @@ dht_callback(void *closure, int event,
 
 extern FILE *dht_debug;
 
+struct sockaddr_in6;
+struct sockaddr_in;
+
 int dht_init(int s, int s6, const char *id, const unsigned char *v);
 int dht_insert_node(const unsigned char *id, struct sockaddr *sa, int salen);
 int dht_ping_node(struct sockaddr *sa, int salen);
 int dht_periodic(int available, time_t *tosleep,
                  dht_callback *callback, void *closure);
-int dht_search(const char *id, int port, int af,
+int dht_search(const unsigned char *id, int port, int af,
                dht_callback *callback, void *closure);
 int dht_nodes(int af,
               int *good_return, int *dubious_return, int *cached_return,

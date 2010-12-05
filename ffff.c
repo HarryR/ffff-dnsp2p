@@ -10,7 +10,6 @@
 #include <string.h>
 #include <sys/queue.h>
 #include <netinet/in.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h> // XXX: windows
@@ -24,6 +23,7 @@
 int f4_log(f4_ctx_t *ctx, const char *fmt, ...) {
     va_list ap;
     int ret;
+    ctx = ctx;  // avoid an "unused" warning.
     va_start(ap, fmt);
     ret = vfprintf(stderr, fmt, ap);
     va_end(ap);
@@ -70,23 +70,23 @@ void f4_set_publish_db_file(f4_ctx_t *ctx, const char *publish_db_file) {
 }
 
 int
-f4_set_listen_dns(f4_ctx_t *ctx, const char *what) {
+f4_set_listen_dns(f4_ctx_t *ctx, const char *address) {
     int ret;
     ctx->listen_dns_sz = sizeof(struct sockaddr_storage);
-    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_dns, &ctx->listen_dns_sz);
+    ret = evutil_parse_sockaddr_port(address, (struct sockaddr *)&ctx->listen_dns, &ctx->listen_dns_sz);
     ctx->role_dns = ret == 0;
     return ret;
 }
 
-int f4_set_listen_p2p(f4_ctx_t *ctx, const char *what) {
+int f4_set_listen_p2p(f4_ctx_t *ctx, const char *address) {
     ctx->listen_p2p_sz = sizeof(struct sockaddr_storage);
-    return evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_p2p, &ctx->listen_p2p_sz);
+    return evutil_parse_sockaddr_port(address, (struct sockaddr *)&ctx->listen_p2p, &ctx->listen_p2p_sz);
 }
 
-int f4_set_listen_admin(f4_ctx_t *ctx, const char *what) {
+int f4_set_listen_admin(f4_ctx_t *ctx, const char *address) {
     int ret;
     ctx->listen_admin_sz = sizeof(struct sockaddr_storage);
-    ret = evutil_parse_sockaddr_port(what, (struct sockaddr *)&ctx->listen_admin, &ctx->listen_admin_sz);
+    ret = evutil_parse_sockaddr_port(address, (struct sockaddr *)&ctx->listen_admin, &ctx->listen_admin_sz);
     ctx->role_admin = ret == 0;
     return ret;
 }
@@ -217,7 +217,8 @@ f4_cb_dht(void *_ctx, int event,
 }
 
 static void
-f4_cb_dht_read( evutil_socket_t s, short event, void *_ctx ) {
+f4_cb_dht_read(evutil_socket_t s, short event, void *_ctx ) {
+    s = s;  // avoid an "unused" warning
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
     time_t tosleep;
     dht_periodic(event == EV_READ, &tosleep, f4_cb_dht, ctx);
@@ -297,7 +298,7 @@ f4_init_crypto(f4_ctx_t *ctx) {
     struct affine_point private_P;
     gcry_mpi_t private_d;
 
-    ctx->cp = curve_by_name("p160");
+    ctx->cp = curve_by_name("p160", DF_BASE36);
     assert( ctx->cp != NULL );
 
     gcry_randomize(&ctx->private_key[0], sizeof(ctx->private_key), GCRY_STRONG_RANDOM);

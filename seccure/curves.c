@@ -135,7 +135,7 @@ static const struct curve curves[CURVE_NUM] = {
     gcry_mpi_set_flag(*x, GCRYMPI_FLAG_SECURE);		           \
   } while(0)
 
-static struct curve_params* load_curve(const struct curve *c)
+static struct curve_params* load_curve(const struct curve *c, enum disp_format df)
 {
   gcry_mpi_t h;
   struct curve_params *cp;
@@ -160,12 +160,12 @@ static struct curve_params* load_curve(const struct curve *c)
   gcry_mpi_add(h, dp->m, dp->m);
   gcry_mpi_sub_ui(h, h, 1);
   cp->pk_len_bin = get_serialization_len(h, DF_BIN);
-  cp->pk_len_compact = get_serialization_len(h, DF_COMPACT);
+  cp->pk_len_compact = get_serialization_len(h, df);
 
   gcry_mpi_mul(h, dp->order, dp->order);
   gcry_mpi_sub_ui(h, h, 1);
   cp->sig_len_bin = get_serialization_len(h, DF_BIN);
-  cp->sig_len_compact = get_serialization_len(h, DF_COMPACT);
+  cp->sig_len_compact = get_serialization_len(h, df);
 
   cp->dh_len_bin = (gcry_mpi_get_nbits(dp->order) / 2 + 7) / 8;
   if (cp->dh_len_bin > 32)
@@ -174,7 +174,7 @@ static struct curve_params* load_curve(const struct curve *c)
   gcry_mpi_set_ui(h, 0);
   gcry_mpi_set_bit(h, 8 * cp->dh_len_bin);
   gcry_mpi_sub_ui(h, h, 1);
-  cp->dh_len_compact = get_serialization_len(h, DF_COMPACT);
+  cp->dh_len_compact = get_serialization_len(h, df);
 
   cp->elem_len_bin = get_serialization_len(dp->m, DF_BIN);
   cp->order_len_bin = get_serialization_len(dp->order, DF_BIN);
@@ -214,26 +214,30 @@ static struct curve_params* load_curve(const struct curve *c)
   return cp;
 }
 
-struct curve_params* curve_by_name(const char *name)
+struct curve_params* curve_by_name(const char *name, enum disp_format df)
 {
   const struct curve *c = curves;
   int i;
   for(i = 0; i < CURVE_NUM; i++, c++)
     if (strstr(c->name, name))
-      return load_curve(c);
+      return load_curve(c, df);
   return NULL;
 }
 
-struct curve_params* curve_by_pk_len_compact(int len)
+struct curve_params* curve_by_pk_len_compact(int len, enum disp_format df)
 {
   const struct curve *c = curves;
   int i;
-  for(i = 0; i < CURVE_NUM; i++, c++)
-    if (c->pk_len_compact == len)
-      return load_curve(c);
+  for(i = 0; i < CURVE_NUM; i++, c++) {
+    struct curve_params *cp = load_curve(c, df);
+    if( cp->pk_len_compact == len ) {
+        return cp;
+    }
+    curve_release(cp);
+  }
   return NULL;
 }
-
+ 
 void curve_release(struct curve_params *cp)
 {
   struct domain_params *dp = &cp->dp;

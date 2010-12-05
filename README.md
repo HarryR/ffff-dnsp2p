@@ -1,23 +1,45 @@
-# Dot-P2P
-### Timeline/Origin
-Here is a timeline of events as they are unfolding at the moment:
+# dnsp2p
+Here is a timeline of events which got the project started
 
-    Hello all #isp of the world. We're going to add a new competing root-server since we're 
-    tired of #ICANN. Please contact me to help. 
+>> Hello all #isp of the world. We're going to add a new competing root-server since we're
+>> tired of #ICANN. Please contact me to help.
 
-Peter Sunde via Twitter @brokep on November 27th, 23:08 PST.
+>Peter Sunde via [Twitter @brokep on November 27th, 23:08](http://twitter.com/brokep/status/8779363872935936)
 
-    Alternative DNS now has a temporary blog.
-    http://p2pdns.baywords.com/2010/11/30/hello-world/
+>> Alternative DNS now has a temporary blog.
+>> [http://p2pdns.baywords.com/2010/11/30/hello-world/](http://p2pdns.baywords.com/2010/11/30/hello-world/)
 
-Peter Sunde via Twitter @brokep on 30 November 2010 08:00 AM
+> Peter Sunde via [Twitter @brokep on 30 November 2010 08:00](http://twitter.com/brokep/status/9517070882447360)
 
 ## Building
-Old build system is make, supported by original developers..
-    make
 
-New hotness is scons, supported by me.  Makes things easier.
+For now you need the following libraries installed:
+
+- [tokyocabinet](http://fallabs.com/tokyocabinet/), lightweight and fast embedded database
+- [libevent](http://monkey.org/~provos/libevent/) >= 2.0, event based network, http & dns library
+- [libgcrypt](http://www.gnupg.org/) >= 1.4.1, general purpose crypto library based on the code used in GnuPG
+
+#### CMake
+You can use cmake to build the project:
+
+    make cmake.build
+
+Here are some of the variables you might want to tweak:
+
+ * ``CMAKE_BUILD_TYPE`` - Debug or Release
+ * ``CMAKE_C_FLAGS`` - Additional compiler flags
+ * ``LIBEVENT2_PREFIX``
+ * ``TOKYOCABINET_PREFIX``
+ * ``GCRYPT_PREFIX`` - Installation prefix of dependencies, if non-standard
+
+This can be passed to CMake as follows:
+
+    cmake .. -DCMAKE_BUILD_TYPE=Debug -DLIBEVENT2_PREFIX=/opt/libevent2/
+
+#### Scons:
+
     scons -j4
+
 
 ### Usage
 
@@ -31,33 +53,6 @@ New hotness is scons, supported by me.  Makes things easier.
      -p <file>         DB file for persistent publish storage
      -n <file>         Properties file for peer list
      -h                Show this help
-
-
-### Build instructions
-
-For now you need the following libraries installed:
-
-- tokyocabinet (http://fallabs.com/tokyocabinet/), a library of routines for managing a database
-
-- libevent >= 2.0 (http://monkey.org/~provos/libevent/), a library to execute a function when a specific event occurs on a file descriptor
-
-- libgcrypt (http://www.gnupg.org/), general purpose crypto library based on the code used in GnuPG
-
-You also will require CMake build system. Quick and dirty build instructions:
-
-    mkdir build; cd build; cmake ..; make
-
-Here are some of the variables you might want to tweak:
-
-| CMAKE_BUILD_TYPE     | Debug or Release                                     |
-| CMAKE_C_FLAGS        | the flags passed to gcc                              |
-| LIBEVENT2_PREFIX,    |                                                      |
-| TOKYOCABINET_PREFIX, |                                                      |
-| GCRYPT_PREFIX        | installation prefix of dependencies, if non-standard |
-
-This can be passed to CMake as follows:
-
-    cmake .. -DCMAKE_BUILD_TYPE=Debug -DLIBEVENT2_PREFIX=/opt/libevent2/
 
 ### Give me more
 More information at [the wiki](http://dot-p2p.org/index.php?title=Main_Page)

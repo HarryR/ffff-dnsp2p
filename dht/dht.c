@@ -57,6 +57,9 @@ THE SOFTWARE.
 #ifdef __GLIBC__
 #define HAVE_MEMMEM
 #endif
+#if __BSD_VISIBLE
+#define HAVE_MEMMEM
+#endif
 #endif
 
 #ifndef MSG_CONFIRM
@@ -1135,7 +1138,7 @@ insert_search_bucket(struct bucket *b, struct search *sr)
 /* Start a search.  If port is non-zero, perform an announce when the
    search is complete. */
 int
-dht_search(const char *id, int port, int af,
+dht_search(const unsigned char *id, int port, int af,
            dht_callback *callback, void *closure)
 {
     struct search *sr;
