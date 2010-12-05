@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <string.h>
 #include <sys/queue.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h> // XXX: windows
@@ -21,6 +22,7 @@
 int f4_log(f4_ctx_t *ctx, const char *fmt, ...) {
     va_list ap;
     int ret;
+    ctx = ctx;  // avoid an "unused" warning.
     va_start(ap, fmt);
     ret = vfprintf(stderr, fmt, ap);
     va_end(ap);
@@ -214,7 +216,8 @@ f4_cb_dht(void *_ctx, int event,
 }
 
 static void
-f4_cb_dht_read( evutil_socket_t s, short event, void *_ctx ) {
+f4_cb_dht_read(evutil_socket_t s, short event, void *_ctx ) {
+    s = s;  // avoid an "unused" warning
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
     time_t tosleep;
     dht_periodic(event == EV_READ, &tosleep, f4_cb_dht, ctx);
@@ -294,7 +297,7 @@ f4_init_crypto(f4_ctx_t *ctx) {
     struct affine_point private_P;
     gcry_mpi_t private_d;
 
-    ctx->cp = curve_by_name("p160");
+    ctx->cp = curve_by_name("p160", DF_BASE36);
     assert( ctx->cp != NULL );
 
     gcry_randomize(&ctx->private_key[0], sizeof(ctx->private_key), GCRY_STRONG_RANDOM);

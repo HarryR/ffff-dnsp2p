@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 find_package(Tokyocabinet REQUIRED)
 find_package(Libevent2 REQUIRED)
 
-add_definitions(-Wall -Wextra -std=gnu99)
+add_definitions(-Wall -Wextra -std=gnu99 -Werror)
 
 add_subdirectory(dht)
 add_subdirectory(seccure)

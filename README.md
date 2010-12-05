@@ -1,36 +1,37 @@
-# Dot-P2P
-Here is a timeline of events as they are unfolding at the moment:
-    Hello all #isp of the world. We're going to add a new competing root-server since we're 
-    tired of #ICANN. Please contact me to help. 
+# dnsp2p
+Here is a timeline of events which got the project started
 
-- Peter Sunde via Twitter @brokep on November 27th, 23:08 PST.
+>> Hello all #isp of the world. We're going to add a new competing root-server since we're
+>> tired of #ICANN. Please contact me to help.
 
-    Alternative DNS now has a temporary blog.
-    http://p2pdns.baywords.com/2010/11/30/hello-world/
+>Peter Sunde via [Twitter @brokep on November 27th, 23:08](http://twitter.com/brokep/status/8779363872935936)
 
-- Peter Sunde via Twitter @brokep on 30 November 2010 08:00 AM
+----
+
+>> Alternative DNS now has a temporary blog.
+>> [http://p2pdns.baywords.com/2010/11/30/hello-world/](http://p2pdns.baywords.com/2010/11/30/hello-world/)
+
+> Peter Sunde via [Twitter @brokep on 30 November 2010 08:00](http://twitter.com/brokep/status/9517070882447360)
 
 ### Build instructions
 
 For now you need the following libraries installed:
 
-- tokyocabinet (http://fallabs.com/tokyocabinet/), a library of routines for managing a database
+- [tokyocabinet](http://fallabs.com/tokyocabinet/), lightweight and fast embedded database
+- [libevent](http://monkey.org/~provos/libevent/) >= 2.0, event based network, http & dns library
+- [libgcrypt](http://www.gnupg.org/) >= 1.4.1, general purpose crypto library based on the code used in GnuPG
 
-- libevent >= 2.0 (http://monkey.org/~provos/libevent/), a library to execute a function when a specific event occurs on a file descriptor
+You can also use cmake to build the project:
 
-- libgcrypt (http://www.gnupg.org/), general purpose crypto library based on the code used in GnuPG
-
-You also will require CMake build system. Quick and dirty build instructions:
-
-    mkdir build; cd build; cmake ..; make
+    make cmake.build
 
 Here are some of the variables you might want to tweak:
 
-| CMAKE_BUILD_TYPE     | Debug or Release                                     |
-| CMAKE_C_FLAGS        | the flags passed to gcc                              |
-| LIBEVENT2_PREFIX,    |                                                      |
-| TOKYOCABINET_PREFIX, |                                                      |
-| GCRYPT_PREFIX        | installation prefix of dependencies, if non-standard |
+ * ``CMAKE_BUILD_TYPE`` - Debug or Release
+ * ``CMAKE_C_FLAGS`` - Additional compiler flags
+ * ``LIBEVENT2_PREFIX``
+ * ``TOKYOCABINET_PREFIX``
+ * ``GCRYPT_PREFIX`` - Installation prefix of dependencies, if non-standard
 
 This can be passed to CMake as follows:
 

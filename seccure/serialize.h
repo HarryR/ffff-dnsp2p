@@ -39,11 +39,13 @@
 #define INC_SERIALIZE_H
 
 #include <gcrypt.h>
-
-enum disp_format { DF_BIN, DF_COMPACT };
+#include "curves.h"
 
 #define COMPACT_DIGITS_COUNT 90
 extern const char compact_digits[];
+
+#define BASE36_DIGIT_COUNT 36
+extern const char base36_digits[];
 
 int get_serialization_len(const gcry_mpi_t x, enum disp_format df);
 void serialize_mpi(char *outbuf, int outlen, enum disp_format df, 

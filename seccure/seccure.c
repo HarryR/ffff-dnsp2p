@@ -66,6 +66,7 @@ int opt_sigbin = 0;
 int opt_sigappend = 0;
 int opt_maclen = -1;
 int opt_dblprompt = 0;
+enum disp_format opt_format = DF_COMPACT;
 char *opt_infile = NULL;
 char *opt_outfile = NULL;
 char *opt_curve = NULL;
@@ -309,7 +310,7 @@ void app_print_public_key(void)
     fprintf(stderr, "Assuming curve " DEFAULT_CURVE ".\n");
   }
 
-  if ((cp = curve_by_name(opt_curve))) {
+  if ((cp = curve_by_name(opt_curve, opt_format))) {
     char pubkey[cp->pk_len_compact + 1];
     char *privkey;
     struct affine_point P;
@@ -330,7 +331,7 @@ void app_print_public_key(void)
     P = pointmul(&cp->dp.base, d, &cp->dp);
     gcry_mpi_release(d);
 
-    compress_to_string(pubkey, DF_COMPACT, &P, cp);
+    compress_to_string(pubkey, opt_format, &P, cp);
     pubkey[cp->pk_len_compact] = 0;
     if (! opt_quiet)
       printf("The public key is: ");
@@ -353,11 +354,11 @@ void app_encrypt(const char *pubkey)
   }
 
   if (opt_curve) {
-    if (! (cp = curve_by_name(opt_curve)))
+    if (! (cp = curve_by_name(opt_curve, opt_format)))
       fatal("Invalid curve name");
   }
   else
-    if (! (cp = curve_by_pk_len_compact(strlen(pubkey))))
+    if (! (cp = curve_by_pk_len_compact(strlen(pubkey), opt_format)))
       fatal("Invalid encryption key (wrong length)");
 
   if (opt_verbose) {
@@ -372,7 +373,7 @@ void app_encrypt(const char *pubkey)
   if (strlen(pubkey) != (size_t)cp->pk_len_compact)
     fatal("Invalid encryption key (wrong length)");
     
-  if (decompress_from_string(&P, pubkey, DF_COMPACT, cp)) {
+  if (decompress_from_string(&P, pubkey, opt_format, cp)) {
     char rbuf[cp->pk_len_bin];
     struct aes256ctr *ac;
     char *keybuf, *md;
@@ -448,7 +449,7 @@ int app_decrypt(void)
     fprintf(stderr, "Assuming curve " DEFAULT_CURVE ".\n");
   }
 
-  if ((cp = curve_by_name(opt_curve))) {
+  if ((cp = curve_by_name(opt_curve, opt_format))) {
     char *keybuf, *privkey;
     char rbuf[cp->pk_len_bin];
     char mdbuf[opt_maclen], *md;
@@ -571,7 +572,7 @@ void app_sign(void)
     fprintf(stderr, "Assuming curve " DEFAULT_CURVE ".\n");
   }
 
-  if ((cp = curve_by_name(opt_curve))) {
+  if ((cp = curve_by_name(opt_curve, opt_format))) {
 
     if (opt_verbose) {
       print_quiet("VERSION: ", 0);
@@ -628,7 +629,7 @@ void app_sign(void)
     }
     else {
       char sigbuf[cp->sig_len_compact + 1];
-      serialize_mpi(sigbuf, cp->sig_len_compact, DF_COMPACT, sig);
+      serialize_mpi(sigbuf, cp->sig_len_compact, opt_format, sig);
       if (opt_sigappend)
 	write_block(opt_fdout, sigbuf, cp->sig_len_compact);
       else {
@@ -667,11 +668,11 @@ int app_verify(const char *pubkey, const char *sig)
     fatal("Binary signature is not accepted here");
   
   if (opt_curve) {
-    if (! (cp = curve_by_name(opt_curve)))
+    if (! (cp = curve_by_name(opt_curve, opt_format)))
       fatal("Invalid curve name");
   }
   else
-    if (! (cp = curve_by_pk_len_compact(strlen(pubkey))))
+    if (! (cp = curve_by_pk_len_compact(strlen(pubkey), opt_format)))
       fatal("Invalid verification key (wrong length)");
   
   if (opt_verbose) {
@@ -684,7 +685,7 @@ int app_verify(const char *pubkey, const char *sig)
   if (strlen(pubkey) != (size_t)cp->pk_len_compact)
     fatal("Invalid verification key (wrong length)");
   
-  if (decompress_from_string(&Q, pubkey, DF_COMPACT, cp)) {
+  if (decompress_from_string(&Q, pubkey, opt_format, cp)) {
     union {
       char compact[cp->sig_len_compact + 2];
       char bin[cp->sig_len_bin];
@@ -757,7 +758,7 @@ int app_verify(const char *pubkey, const char *sig)
 	goto error;
       }
       else
-	if (! deserialize_mpi(&s, DF_COMPACT, sig, cp->sig_len_compact)) {
+	if (! deserialize_mpi(&s, opt_format, sig, cp->sig_len_compact)) {
 	  print_quiet("Invalid signature (inconsistent structure)!\n", 1);
 	  goto error; 
 	}
@@ -792,15 +793,15 @@ void app_signcrypt(const char *pubkey)
     opt_curve = DEFAULT_CURVE;
     fprintf(stderr, "Assuming signature curve " DEFAULT_CURVE ".\n");
   }
-  if (! (cp_sig = curve_by_name(opt_curve)))
+  if (! (cp_sig = curve_by_name(opt_curve, opt_format)))
     fatal("Invalid curve name");
 
   if (opt_curve2) {
-    if (! (cp_enc = curve_by_name(opt_curve2)))
+    if (! (cp_enc = curve_by_name(opt_curve2, opt_format)))
       fatal("Invalid curve name");
   }
   else
-    if (! (cp_enc = curve_by_pk_len_compact(strlen(pubkey))))
+    if (! (cp_enc = curve_by_pk_len_compact(strlen(pubkey), opt_format)))
       fatal("Invalid encryption key (wrong length)");
 
   if (opt_verbose) {
@@ -815,7 +816,7 @@ void app_signcrypt(const char *pubkey)
   if (strlen(pubkey) != (size_t)cp_enc->pk_len_compact)
     fatal("Invalid encryption key (wrong length)");
 
-  if (decompress_from_string(&P, pubkey, DF_COMPACT, cp_enc)) {
+  if (decompress_from_string(&P, pubkey, opt_format, cp_enc)) {
     char rbuf[cp_enc->pk_len_bin];
     char sigbuf[cp_sig->sig_len_bin];
     char *privkey, *keybuf, *md;
@@ -898,15 +899,15 @@ int app_veridec(const char *pubkey)
     opt_curve = DEFAULT_CURVE;
     fprintf(stderr, "Assuming encryption curve " DEFAULT_CURVE ".\n");
   }
-  if (! (cp_enc = curve_by_name(opt_curve)))
+  if (! (cp_enc = curve_by_name(opt_curve, opt_format)))
     fatal("Invalid curve name");
 
   if (opt_curve2) {
-    if (! (cp_sig = curve_by_name(opt_curve2)))
+    if (! (cp_sig = curve_by_name(opt_curve2, opt_format)))
       fatal("Invalid curve name");
   }
   else
-    if (! (cp_sig = curve_by_pk_len_compact(strlen(pubkey))))
+    if (! (cp_sig = curve_by_pk_len_compact(strlen(pubkey), opt_format)))
       fatal("Invalid verification key (wrong length)");
 
   if (opt_verbose) {
@@ -921,7 +922,7 @@ int app_veridec(const char *pubkey)
   if (strlen(pubkey) != (size_t)cp_sig->pk_len_compact)
     fatal("Invalid verification key (wrong length)");
 
-  if (decompress_from_string(&Q, pubkey, DF_COMPACT, cp_sig)) {
+  if (decompress_from_string(&Q, pubkey, opt_format, cp_sig)) {
     char rbuf[cp_enc->pk_len_bin];
     char sigbuf[cp_sig->sig_len_bin];
     char *privkey, *keybuf, *md;
@@ -1020,7 +1021,7 @@ void app_dh(void)
     fprintf(stderr, "Assuming curve " DEFAULT_CURVE ".\n");
   }
 
-  if ((cp = curve_by_name(opt_curve))) {
+  if ((cp = curve_by_name(opt_curve, opt_format))) {
     char keyA[cp->pk_len_compact + 1];
     char keyB[cp->pk_len_compact + 2];
     char *keybuf, *outbuf;
@@ -1035,7 +1036,7 @@ void app_dh(void)
     }
     
     exp = DH_step1(&A, cp);
-    compress_to_string(keyA, DF_COMPACT, &A, cp);
+    compress_to_string(keyA, opt_format, &A, cp);
     point_release(&A);
     keyA[cp->pk_len_compact] = 0;
     print_quiet("Pass this key to your peer: ", 0);
@@ -1050,7 +1051,7 @@ void app_dh(void)
     if (strlen(keyB) != (size_t)cp->pk_len_compact)
       fatal("Invalid key (wrong length)");
 
-    if (decompress_from_string(&B, keyB, DF_COMPACT, cp)) {
+    if (decompress_from_string(&B, keyB, opt_format, cp)) {
 
       if (! (keybuf = gcry_malloc_secure(64)))
 	fatal("Out of secure memory");
@@ -1074,7 +1075,7 @@ void app_dh(void)
 	  fatal("Out of secure memory");
 
 	assert(deserialize_mpi(&h, DF_BIN, keybuf, cp->dh_len_bin));
-	serialize_mpi(outbuf, cp->dh_len_compact, DF_COMPACT, h);
+	serialize_mpi(outbuf, cp->dh_len_compact, opt_format, h);
 	outbuf[cp->dh_len_compact] = 0;
 	gcry_mpi_release(h);
 
@@ -1083,7 +1084,7 @@ void app_dh(void)
 	printf("%s\n", outbuf);
 
 	assert(deserialize_mpi(&h, DF_BIN, keybuf + 32, cp->dh_len_bin));
-	serialize_mpi(outbuf, cp->dh_len_compact, DF_COMPACT, h);
+	serialize_mpi(outbuf, cp->dh_len_compact, opt_format, h);
 	outbuf[cp->dh_len_compact] = 0;
 	gcry_mpi_release(h);
 
@@ -1134,8 +1135,9 @@ int main(int argc, char **argv)
   if ((progname = strrchr(argv[0], '/')) == NULL)
     progname = argv[0];
   
-  while((i = getopt(argc, argv, "fbadm:i:o:F:s:c:hvq")) != -1)
+  while((i = getopt(argc, argv, "rfbadm:i:o:F:s:c:hvq")) != -1)
     switch(i) {
+    case 'r': opt_format = DF_BASE36; break;
     case 'f': opt_sigcopy = 1; break;
     case 'b': opt_sigbin = 1; break;
     case 'a': opt_sigappend = 1; break;

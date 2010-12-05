@@ -95,7 +95,7 @@ void compress_to_string(char *buf, enum disp_format df,
 			const struct affine_point *P, 
 			const struct curve_params *cp)
 {
-  int outlen = (df == DF_COMPACT) ? cp->pk_len_compact : cp->pk_len_bin;
+  int outlen = (df != DF_BIN) ? cp->pk_len_compact : cp->pk_len_bin;
   if (point_compress(P)) {
     gcry_mpi_t x;
     x = gcry_mpi_snew(0);
@@ -111,9 +111,9 @@ int decompress_from_string(struct affine_point *P, const char *buf,
 			   enum disp_format df, const struct curve_params *cp)
 {
   gcry_mpi_t x;
-  int inlen = (df == DF_COMPACT) ? cp->pk_len_compact : cp->pk_len_bin;
+  unsigned inlen = (df !=DF_BIN ) ? cp->pk_len_compact : cp->pk_len_bin;
   int res;
-  assert(! (df == DF_COMPACT && strlen(buf) != inlen));
+  assert(! (df != DF_BIN && strlen(buf) != inlen));
   if ((res = deserialize_mpi(&x, df, buf, inlen))) {
     int yflag;
     if ((yflag = (gcry_mpi_cmp(x, cp->dp.m) >= 0)))
