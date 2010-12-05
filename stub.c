@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include <libgen.h>
 
+/**
+ * This is the main loop.
+ */
 static int
 run_stuff( f4_ctx_t* ctx ) {
     struct timeval timeout = {5, 5000};
@@ -19,6 +22,10 @@ run_stuff( f4_ctx_t* ctx ) {
     return -1;
 }
 
+/**
+ * Print the help message.
+ * @param argv0 the name of the program.
+ */
 static void
 show_help( char *argv0 ) {
     const char *derp = basename(argv0);
@@ -34,16 +41,31 @@ show_help( char *argv0 ) {
     fprintf(stderr, " -h                Show this help\n");
 }
 
+/**
+ * Main function.
+ * @param argc the number of arguments at the command line.
+ * @param argv the arguments themselves.
+ */
 int
 main(int argc, char** argv) {
+    // The error code from gcrypt
     gcry_error_t err;
+
+    // The ffff object.
     f4_ctx_t *ctx;
+
+    // The LibEvent object. This is passed to the ffff object.
     struct event_base *base;
     base = event_base_new();
+
     ctx = f4_new();
+
     int ret = EXIT_FAILURE;
+
+    // If no arguments then print the help message.
     bool should_show_help = (argc == 1);
 
+    // Init gcrypt.
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
     if (gcry_err_code(err)) {
       fprintf(stderr, "Cannot enable gcrypt's secure memory management\n");
@@ -61,12 +83,15 @@ main(int argc, char** argv) {
     f4_set_listen_p2p(ctx, "[::]:14010");
     f4_set_listen_admin(ctx, "[::]:14040");
 
+    // char* optarg; This is set by getopt().
+
     int ch;
     while( (ch = getopt(argc, argv, "D:A:P:s:p:b:h")) != -1 ) {
         switch(ch) {
         case 'D':
             f4_set_listen_dns(ctx, optarg);
             break;
+
         case 'A':
             f4_set_listen_admin(ctx, optarg);
             break;
@@ -93,33 +118,42 @@ main(int argc, char** argv) {
         }
     }
 
-    if( ! ctx->db_file ) {
+    if( ! should_show_help && ! ctx->db_file ) {
         fprintf(stderr, "Error: must specify status database file, with -s\n");
         should_show_help = true;
     }
 
-    if( ! ctx->bootstrap_file ) {
-        fprintf(stderr, "Warning: using default bootstrap peers, override with -b\n");
-        f4_add_peer(ctx, "router.bittorrent.com", "6881");
-        if( ctx->listen_p2p.ss_family == AF_INET6 ) {
-            f4_add_peer(ctx, "dht.wifi.pps.jussieu.fr", "6881");
-        }
+    if( should_show_help ) {
+        // Show help and exit.
+        show_help(argv[0]);
     }
+    else {
+        // Otherwise start the engine.
 
-    if( ! should_show_help ) {
-        f4_set_event_base(ctx, base);       
-        if( ! f4_init(ctx) ) {
+        if( ! ctx->bootstrap_file ) {
+            fprintf(stderr, "Warning: using default bootstrap peers, override with -b\n");
+            f4_add_peer(ctx, "router.bittorrent.com", "6881");
+            if( ctx->listen_p2p.ss_family == AF_INET6 ) {
+                f4_add_peer(ctx, "dht.wifi.pps.jussieu.fr", "6881");
+            }
+        }
+
+        // Put the libEvent into the ffff object.
+        f4_set_event_base(ctx, base);
+
+        // Initialize context, opening any sockets, database files etc.
+        if( f4_init(ctx) ) {
+            // Then enter the main loop.
+            ret = run_stuff(ctx);
+        }
+        else {
+            // Or fail.
             fprintf(stderr, "Couldn't fully init F4 subsystem\n");
             ret = EXIT_FAILURE;
         }
-        else {
-            ret = run_stuff(ctx);
-        }
-    }
-    else {
-        show_help(argv[0]);
     }
 
+    // Clean up.
     f4_free(ctx);
     event_base_free(base);
     return (ret);
