@@ -51,7 +51,7 @@ f4op_remove( struct rb_node *n, f4op_t *op, f4op_ctx_t *ctx ) {
 }
 
 f4op_t*
-f4op_find( f4op_ctx_t *ctx, const unsigned char *id ) {
+f4op_find( f4op_ctx_t *ctx, const char *id ) {
     struct rb_node *n = ctx->ops.rb_node;
     f4op_t *op;
 
