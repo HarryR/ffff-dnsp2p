@@ -6,7 +6,7 @@ Here is a timeline of events which got the project started
 
 >Peter Sunde via [Twitter @brokep on November 27th, 23:08](http://twitter.com/brokep/status/8779363872935936)
 
-<p>
+----
 
 >> Alternative DNS now has a temporary blog.
 >> [http://p2pdns.baywords.com/2010/11/30/hello-world/](http://p2pdns.baywords.com/2010/11/30/hello-world/)
