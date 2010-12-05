@@ -35,7 +35,7 @@ void f4op_free_ctx( f4op_ctx_t *ctx );
 
 f4op_t* f4op_add( f4op_ctx_t *ctx, f4op_t *op );
 
-f4op_t* f4op_find( f4op_ctx_t *ctx, const char *id );
+f4op_t* f4op_find( f4op_ctx_t *ctx, const unsigned char *id );
 
 /**
  * Remove node from op context

@@ -9,7 +9,10 @@ import re
 sys = platform.system()
 
 env = Environment(
-  LIBS = ['gcrypt', 'event', 'tokyocabinet']
+  LIBS = ['gcrypt', 'event', 'tokyocabinet'],
+  CCCOMSTR = "[ C] $TARGET",
+  ARCOMSTR = "[AR] $TARGET",
+  RANLIBCOMSTR = "[RL] $TARGET",
 )
 
 env.Append(CPPPATH = Split("""
@@ -64,7 +67,7 @@ if not conf.CheckLib('event') or not conf.CheckFunc('evdns_base_new'):
 conf.Finish()
 
 Export('env')
-SConscript('#seccure/SConscript')
+SConscript(['#seccure/SConscript', '#dht/SConscript'])
 
 env.StaticLibrary('ffff', [libffff_objs, seccure_objs, dht_objs])
-env.Program('dnsp2p', ['stub.c', 'libffff.a'])
+env.Program('dnsp2p', ['stub.c', 'libffff.a', '#dht/libdht.a'])
