@@ -13,6 +13,7 @@ env = Environment(
   CCCOMSTR = "[ C] $TARGET",
   ARCOMSTR = "[AR] $TARGET",
   RANLIBCOMSTR = "[RL] $TARGET",
+  LINKCOMSTR = "[ L] $TARGET",
 )
 
 env.Append(CPPPATH = Split("""
