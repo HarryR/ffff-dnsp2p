@@ -202,7 +202,7 @@ dht_hash(void *hash_return, int hash_size,
 
 static void
 f4_cb_dht(void *_ctx, int event,
-             char *info_hash,
+             unsigned char *info_hash,
              void *data, size_t data_len)
 {
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;

@@ -27,4 +27,6 @@ f4dns_ctx_t *f4dns_new(f4_ctx_t *f4_ctx);
 bool f4dns_init(f4dns_ctx_t *ctx);
 void f4dns_free(f4dns_ctx_t *ctx);
 
+bool f4dns_is_valid(const char *fqdn);
+
 #endif
