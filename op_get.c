@@ -8,6 +8,11 @@
 static void
 opget_dht_callback(f4_ctx_t* ctx, struct f4op *op, int event, void *data, size_t data_len) {
     assert( false );
+    (void)ctx;
+    (void)op;
+    (void)event;
+    (void)data;
+    (void)data_len;
     // TODO: implement me
 }
 

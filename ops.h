@@ -14,7 +14,7 @@ enum {
 
 struct f4op {
     struct rb_node node;
-    char id[20];
+    unsigned char id[20];
     uint8_t mode;
     char *type;
     char *fqn;

@@ -22,7 +22,7 @@ For now you need the following libraries installed:
 #### CMake
 You can use cmake to build the project:
 
-    make cmake.build
+    make cmake.build [CMAKE_OPTS=<cmake options>]
 
 Here are some of the variables you might want to tweak:
 
