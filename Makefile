@@ -20,7 +20,7 @@ all: libffff.a dnsp2p.exe
 
 .PHONY: cmake.build
 cmake.build:
-	-mkdir -p cmake.build && cd cmake.build && cmake ..
+	-mkdir -p cmake.build && cd cmake.build && cmake .. $(CMAKE_OPTS)
 
 libbenc/libbenc.a:
 	make -C libbenc libbenc.a
