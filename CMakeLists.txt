@@ -18,5 +18,5 @@ add_library(ffff ffff.c properties.c admin.c dns.c rbtree.c ops.c op_get.c crypt
 target_link_libraries(ffff seccure dht ${LIBEVENT2_LIBRARIES} ${TOKYOCABINET_LIBRARIES})
 
 add_executable(dnsp2p stub.c)
-target_link_libraries(dnsp2p ffff libbenc)
+target_link_libraries(dnsp2p ffff benc)
 install(TARGETS dnsp2p RUNTIME DESTINATION sbin)
