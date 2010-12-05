@@ -26,7 +26,7 @@ all: libffff.a dnsp2p.exe
 
 .PHONY: cmake.build
 cmake.build:
-	-mkdir -p cmake.build && cd cmake.build && cmake ..
+	-mkdir -p cmake.build && cd cmake.build && cmake .. $(CMAKE_OPTS)
 
 libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs)
 	$(AR) ru $@ $+
