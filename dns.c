@@ -76,6 +76,15 @@ f4dns_new(f4_ctx_t *f4_ctx) {
     return ctx;
 }
 
+/**
+ * Handle an incomming DNS request.
+ * This is a callback which is passed to libevent and libevent calls it
+ * when a DNS request comes in.
+ *
+ * @param req the libevent dns request which initiated the call.
+ * @param _ctx the ffff DNS context. This is passed as a void type because
+ *             libevent only knows it as "user data".
+ */
 static void 
 _f4dns_cb_dnsserver(struct evdns_server_request *req, void *_ctx) {
     assert( _ctx != NULL );
