@@ -11,9 +11,11 @@ seccure/seccure-sign
 seccure/seccure-signcrypt
 seccure/seccure-veridec
 seccure/seccure-verify
+DNS-P2P-panda.xcodeproj
 *.exe
 dnsp2p
 CMakeFiles
 cmake_install.cmake
 CmakeCache.txt
 tmp
+build

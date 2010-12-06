@@ -13,8 +13,10 @@ typedef struct benc_dict_entry_s    benc_dict_entry_t;
 
 enum benc_data_type { BENC_INT, BENC_BSTR, BENC_LIST, BENC_DICT };
 
+/*
 bool            benc_file(bobj_t *o, char *file_path);
 bobj_t *        bdec_file(char *file_path);
+ */
 
 bbuf_t *        bbuf_new(size_t len, char *base);
 void            bbuf_free(bbuf_t *b);
@@ -23,7 +25,7 @@ bobj_t *        bdec_mem(bbuf_t *b);
 
 bobj_t *        bobj_int_new(benc_int_t i);
 
-bobj_t *        bobj_bstr_new(size_t len, uint8_t *bytes);
+bobj_t *        bobj_bstr_new(size_t len, char *bytes);
 
 bobj_t *        bobj_list_new();
 void            bobj_list_push(bobj_t *obj, bobj_t *elem);
@@ -54,7 +56,7 @@ struct bobj_s {
 
 struct benc_bstr_s {
     size_t                       len;
-    uint8_t                      *bytes;
+    char                      *bytes;
 };
 
 struct benc_list_entry_s {

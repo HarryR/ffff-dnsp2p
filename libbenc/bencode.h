@@ -7,20 +7,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include "benc.h"
 
-#define BENC_LOG_EXCEPTION(msg, args...)                       \
-    fprintf(stderr,                                            \
-        "benc: %s:%d:%s: exception: " msg "\n",                \
-        __FILE__, __LINE__, __func__ , ## args)
+void benc_log_exception(const char *file, int line, const char *func, const char *msg, ...);
+void benc_log_syscall(const char *file, int line, const char *func, const char *syscall_name, const char *msg, ...);
 
-#define BENC_LOG_SYSCALL_ERROR(syscall_name, msg, args...)     \
-    fprintf(stderr,                                            \
-        "benc: %s:%d:%s: " syscall_name "()"                   \
-        " failed (status %d): %s. " msg "\n",                  \
-        __FILE__, __LINE__, __func__,                          \
-        errno, strerror(errno) , ## args)
+#define BENC_LOG_EXCEPTION(...) (benc_log_exception(__FILE__, __LINE__, __func__, __VA_ARGS__))
+#define BENC_LOG_SYSCALL_ERROR(...) (benc_log_exception(__FILE__, __LINE__, __func__, __VA_ARGS__))
 
 bobj_t *        bobj_new(enum benc_data_type type);
 size_t          bobj_repsize(bobj_t *o);
@@ -32,7 +27,7 @@ size_t          benc_int_repsize(benc_int_t i);
 void            benc_int_encode(bbuf_t *b, benc_int_t i);
 bool            benc_int_decode(bbuf_t *b, benc_int_t *i_p);
 
-benc_bstr_t *   benc_bstr_new(size_t len, uint8_t *bytes);
+benc_bstr_t *   benc_bstr_new(size_t len, char *bytes);
 void            benc_bstr_free(benc_bstr_t *s);
 size_t          benc_bstr_repsize(benc_bstr_t *s);
 void            benc_bstr_encode(bbuf_t *b, benc_bstr_t *s);

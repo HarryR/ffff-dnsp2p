@@ -39,7 +39,6 @@ f4crypto_hash_fqdn( const char *fqdn, uint8_t replica, char *hash_return ) {
     assert( ! gcry_err_code(err) );
 
     gcry_md_write(mh, prefix, sizeof(prefix));
-    //gcry_md_write(mh, request_type, strlen(request_type));
     gcry_md_write(mh, fqdn, strlen(fqdn));
     gcry_md_write(mh, &replica, sizeof(uint8_t));
 

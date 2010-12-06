@@ -2,11 +2,11 @@
 
 size_t pseudo_log10_size_t(size_t x);
 
-benc_bstr_t * benc_bstr_new(size_t len, uint8_t *bytes)
+benc_bstr_t * benc_bstr_new(size_t len, char *bytes)
 {
     if (NULL == bytes && len > 0)
     {
-        bytes = (uint8_t *)malloc(len * sizeof(uint8_t));
+        bytes = (char *)malloc(len * sizeof(char));
     }
     if (NULL == bytes)
     {
@@ -119,7 +119,7 @@ size_t pseudo_log10_size_t(size_t x)
     return pseudo_log;
 }
 
-bobj_t * bobj_bstr_new(size_t len, uint8_t *bytes)
+bobj_t * bobj_bstr_new(size_t len, char *bytes)
 {
     bobj_t *obj = bobj_new(BENC_BSTR);
     obj->as.bstr = benc_bstr_new(len, bytes);

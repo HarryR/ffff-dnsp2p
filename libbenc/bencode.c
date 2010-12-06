@@ -4,6 +4,22 @@
 
 #include "bencode.h"
 
+void benc_log_exception(const char *file, int line, const char *func, const char *msg, ...) {
+	va_list ap;
+	va_start(ap, msg);
+	fprintf(stderr, "benc: %s:%d:%s: exception: ", file, line, func);
+	vfprintf(stderr, msg, ap);
+	va_end(ap);
+}
+
+void benc_log_syscall(const char *file, int line, const char *func, const char *syscall_name, const char *msg, ...) {
+	va_list ap;
+	va_start(ap, msg);
+	fprintf(stderr, "benc: %s:%d:%s: %s() failed (status %d): %s. ", file, line, func, syscall_name, errno, strerror(errno));
+	vfprintf(stderr, msg, ap);
+	va_end(ap);
+}
+
 bobj_t * bobj_new(enum benc_data_type type)
 {
     bobj_t *o = (bobj_t *)malloc(sizeof(bobj_t));

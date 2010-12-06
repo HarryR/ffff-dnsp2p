@@ -25,10 +25,10 @@ cmake.build:
 libbenc/libbenc.a:
 	make -C libbenc libbenc.a
 
-libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs) libbenc/libbenc.a
+libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs)
 	$(AR) ru $@ $+
 
-dnsp2p.exe: $(dnsp2p_objs) libffff.a
+dnsp2p.exe: $(dnsp2p_objs) libffff.a libbenc/libbenc.a
 	$(CC) -o $@ $(LDFLAGS) $+ $(LIBS)
 
 clean:
