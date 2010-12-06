@@ -9,6 +9,8 @@ find_package(Libevent2 REQUIRED)
 
 add_definitions(-Wall -Wextra -std=gnu99 -Werror)
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 add_subdirectory(dht)
 add_subdirectory(seccure)
 add_subdirectory(libbenc)
@@ -18,5 +20,5 @@ add_library(ffff ffff.c properties.c admin.c dns.c rbtree.c ops.c op_get.c crypt
 target_link_libraries(ffff seccure dht ${LIBEVENT2_LIBRARIES} ${TOKYOCABINET_LIBRARIES})
 
 add_executable(dnsp2p stub.c)
-target_link_libraries(dnsp2p ffff benc)
+target_link_libraries(dnsp2p ffff)
 install(TARGETS dnsp2p RUNTIME DESTINATION sbin)
