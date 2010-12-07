@@ -1231,19 +1231,29 @@ storage_store(const unsigned char *id, struct sockaddr *sa)
     struct storage *st;
     unsigned char *ip;
     unsigned short port;
+    // Maintains AF independence.
+    union {
+        struct sockaddr     sa;
+        struct sockaddr_in  sin;
+        struct sockaddr_in6 sin6;
+    } su;
+    if(!sa) return -1;
+    su.sa = *sa;
 
-    if(sa->sa_family == AF_INET) {
-        struct sockaddr_in *sin = (struct sockaddr_in*)sa;
-        ip = (unsigned char*)&sin->sin_addr;
-        len = 4;
-        port = ntohs(sin->sin_port);
-    } else if(sa->sa_family == AF_INET6) {
-        struct sockaddr_in6 *sin6 = (struct sockaddr_in6*)sa;
-        ip = (unsigned char*)&sin6->sin6_addr;
-        len = 16;
-        port = ntohs(sin6->sin6_port);
-    } else {
-        return -1;
+    switch(sa->sa_family)
+    {
+        case AF_INET:
+            ip = (unsigned char*)&su.sin.sin_addr;
+            len = 4;
+            port = ntohs(su.sin.sin_port);
+            break;
+        case AF_INET6:
+            ip = (unsigned char*)&su.sin6.sin6_addr;
+            len = 16;
+            port = ntohs(su.sin6.sin6_port);
+            break;
+        default:
+            return -1;
     }
 
     st = find_storage(id);
@@ -1838,14 +1848,6 @@ int
 dht_periodic(int available, time_t *tosleep,
              dht_callback *callback, void *closure)
 {
-    typedef union address
-    {
-        struct sockaddr sa;
-        struct sockaddr_in sa_in;
-        struct sockaddr_in6 sa_in6;
-        struct sockaddr_storage sa_stor;
-    } address_t;
-
     int i;
 
     gettimeofday(&now, NULL);
@@ -1860,20 +1862,26 @@ dht_periodic(int available, time_t *tosleep,
         unsigned char values[2048], values6[2048];
         int values_len = 2048, values6_len = 2048;
         int want;
-        address_t source;
-        socklen_t sourcelen = sizeof(source.sa_stor);
+        // Breaks strict aliasing:
+        //struct sockaddr *source = (struct sockaddr*)&source_storage;
+        // This allows us to stay AF independent while keeping within
+        // strict aliasing rules.
+        union {
+            struct sockaddr_storage ss;
+            struct sockaddr sa;
+        } su;
+        socklen_t sourcelen = sizeof(su.ss);
         unsigned short ttid;
 
         rc = -1;
         if(dht_socket >= 0) {
-            rc = recvfrom(dht_socket, buf, 1536, 0, &source.sa, &sourcelen);
+            rc = recvfrom(dht_socket, buf, 1536, 0, &su.sa, &sourcelen);
             if(rc < 0 && errno != EAGAIN) {
                     return rc;
             }
         }
         if(dht_socket6 >= 0 && rc < 0) {
-            rc = recvfrom(dht_socket6, buf, 1536, 0,
-                          &source.sa, &sourcelen);
+            rc = recvfrom(dht_socket6, buf, 1536, 0, &su.sa, &sourcelen);
             if(rc < 0 && errno != EAGAIN) {
                     return rc;
             }
@@ -1882,11 +1890,11 @@ dht_periodic(int available, time_t *tosleep,
         if(rc < 0 || sourcelen > sizeof(struct sockaddr_storage))
             goto dontread;
 
-        if(is_martian(&source.sa))
+        if(is_martian(&su.sa))
             goto dontread;
 
         for(i = 0; i < DHT_MAX_BLACKLISTED; i++) {
-            if(memcmp(&blacklist[i], &source.sa, sourcelen) == 0) {
+            if(memcmp(&blacklist[i], &su.sa, sourcelen) == 0) {
                 debugf("Received packet from blacklisted node.\n");
                 goto dontread;
             }
@@ -1938,31 +1946,31 @@ dht_periodic(int available, time_t *tosleep,
                 /* This is really annoying, as it means that we will
                    time-out all our searches that go through this node.
                    Kill it. */
-                broken_node(id, &source.sa, sourcelen);
+                broken_node(id, &su.sa, sourcelen);
                 goto dontread;
             }
             if(tid_match(tid, "pn", NULL)) {
                 debugf("Pong!\n");
-                new_node(id, &source.sa, sourcelen, 2);
+                new_node(id, &su.sa, sourcelen, 2);
             } else if(tid_match(tid, "fn", NULL) ||
                       tid_match(tid, "gp", NULL)) {
                 int gp = 0;
                 struct search *sr = NULL;
                 if(tid_match(tid, "gp", &ttid)) {
                     gp = 1;
-                    sr = find_search(ttid, source.sa.sa_family);
+                    sr = find_search(ttid, su.sa.sa_family);
                 }
                 debugf("Nodes found (%d+%d)%s!\n", nodes_len/26, nodes6_len/38,
                        gp ? " for get_peers" : "");
                 if(nodes_len % 26 != 0 || nodes6_len % 38 != 0) {
                     debugf("Unexpected length for node info!\n");
-                    broken_node(id, &source.sa, sourcelen);
+                    broken_node(id, &su.sa, sourcelen);
                 } else if(gp && sr == NULL) {
                     debugf("Unknown search!\n");
-                    new_node(id, &source.sa, sourcelen, 1);
+                    new_node(id, &su.sa, sourcelen, 1);
                 } else {
                     int i;
-                    new_node(id, &source.sa, sourcelen, 2);
+                    new_node(id, &su.sa, sourcelen, 2);
                     for(i = 0; i < nodes_len / 26; i++) {
                         unsigned char *ni = nodes + i * 26;
                         struct sockaddr_in sin;
@@ -2004,7 +2012,7 @@ dht_periodic(int available, time_t *tosleep,
                         search_send_get_peers(sr, NULL);
                 }
                 if(sr) {
-                    insert_search_node(id, &source.sa, sourcelen, sr,
+                    insert_search_node(id, &su.sa, sourcelen, sr,
                                        1, token, token_len);
                     if(values_len > 0 || values6_len > 0) {
                         debugf("Got values (%d+%d)!\n",
@@ -2023,13 +2031,13 @@ dht_periodic(int available, time_t *tosleep,
             } else if(tid_match(tid, "ap", &ttid)) {
                 struct search *sr;
                 debugf("Got reply to announce_peer.\n");
-                sr = find_search(ttid, source.sa.sa_family);
+                sr = find_search(ttid, su.sa.sa_family);
                 if(!sr) {
                     debugf("Unknown search!\n");
-                    new_node(id, &source.sa, sourcelen, 1);
+                    new_node(id, &su.sa, sourcelen, 1);
                 } else {
                     int i;
-                    new_node(id, &source.sa, sourcelen, 2);
+                    new_node(id, &su.sa, sourcelen, 2);
                     for(i = 0; i < sr->numnodes; i++)
                         if(id_cmp(sr->nodes[i].id, id) == 0) {
                             sr->nodes[i].request_time = 0;
@@ -2049,41 +2057,41 @@ dht_periodic(int available, time_t *tosleep,
             break;
         case PING:
             debugf("Ping (%d)!\n", tid_len);
-            new_node(id, &source.sa, sourcelen, 1);
+            new_node(id, &su.sa, sourcelen, 1);
             debugf("Sending pong.\n");
-            send_pong(&source.sa, sourcelen, tid, tid_len);
+            send_pong(&su.sa, sourcelen, tid, tid_len);
             break;
         case FIND_NODE:
             debugf("Find node!\n");
-            new_node(id, &source.sa, sourcelen, 1);
+            new_node(id, &su.sa, sourcelen, 1);
             debugf("Sending closest nodes (%d).\n", want);
-            send_closest_nodes(&source.sa, sourcelen,
+            send_closest_nodes(&su.sa, sourcelen,
                                tid, tid_len, target, want,
                                0, NULL, NULL, 0);
             break;
         case GET_PEERS:
             debugf("Get_peers!\n");
-            new_node(id, &source.sa, sourcelen, 1);
+            new_node(id, &su.sa, sourcelen, 1);
             if(id_cmp(info_hash, zeroes) == 0) {
                 debugf("Eek!  Got get_peers with no info_hash.\n");
-                send_error(&source.sa, sourcelen, tid, tid_len,
+                send_error(&su.sa, sourcelen, tid, tid_len,
                            203, "Get_peers with no info_hash");
                 break;
             } else {
                 struct storage *st = find_storage(info_hash);
                 unsigned char token[TOKEN_SIZE];
-                make_token(&source.sa, 0, token);
+                make_token(&su.sa, 0, token);
                 if(st && st->numpeers > 0) {
                      debugf("Sending found%s peers.\n",
-                            source.sa.sa_family == AF_INET6 ? " IPv6" : "");
-                     send_closest_nodes(&source.sa, sourcelen,
+                            su.sa.sa_family == AF_INET6 ? " IPv6" : "");
+                     send_closest_nodes(&su.sa, sourcelen,
                                         tid, tid_len,
                                         info_hash, want,
-                                        source.sa.sa_family, st,
+                                        su.sa.sa_family, st,
                                         token, TOKEN_SIZE);
                 } else {
                     debugf("Sending nodes for get_peers.\n");
-                    send_closest_nodes(&source.sa, sourcelen,
+                    send_closest_nodes(&su.sa, sourcelen,
                                        tid, tid_len, info_hash, want,
                                        0, NULL, token, TOKEN_SIZE);
                 }
@@ -2091,31 +2099,31 @@ dht_periodic(int available, time_t *tosleep,
             break;
         case ANNOUNCE_PEER:
             debugf("Announce peer!\n");
-            new_node(id, &source.sa, sourcelen, 1);
+            new_node(id, &su.sa, sourcelen, 1);
             if(id_cmp(info_hash, zeroes) == 0) {
                 debugf("Announce_peer with no info_hash.\n");
-                send_error(&source.sa, sourcelen, tid, tid_len,
+                send_error(&su.sa, sourcelen, tid, tid_len,
                            203, "Announce_peer with no info_hash");
                 break;
             }
-            if(!token_match(token, token_len, &source.sa)) {
+            if(!token_match(token, token_len, &su.sa)) {
                 debugf("Incorrect token for announce_peer.\n");
-                send_error(&source.sa, sourcelen, tid, tid_len,
+                send_error(&su.sa, sourcelen, tid, tid_len,
                            203, "Announce_peer with wrong token");
                 break;
             }
             if(port == 0) {
                 debugf("Announce_peer with forbidden port %d.\n", port);
-                send_error(&source.sa, sourcelen, tid, tid_len,
+                send_error(&su.sa, sourcelen, tid, tid_len,
                            203, "Announce_peer with forbidden port number");
                 break;
             }
-            storage_store(info_hash, &source.sa);
+            storage_store(info_hash, &su.sa);
             /* Note that if storage_store failed, we lie to the requestor.
                This is to prevent them from backtracking, and hence
                polluting the DHT. */
             debugf("Sending peer announced.\n");
-            send_peer_announced(&source.sa, sourcelen, tid, tid_len);
+            send_peer_announced(&su.sa, sourcelen, tid, tid_len);
         }
     }
 
