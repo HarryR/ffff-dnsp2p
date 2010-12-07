@@ -6,12 +6,14 @@ Here is a timeline of events which got the project started
 
 >Peter Sunde via [Twitter @brokep on November 27th, 23:08](http://twitter.com/brokep/status/8779363872935936)
 
+----
+
 >> Alternative DNS now has a temporary blog.
 >> [http://p2pdns.baywords.com/2010/11/30/hello-world/](http://p2pdns.baywords.com/2010/11/30/hello-world/)
 
 > Peter Sunde via [Twitter @brokep on 30 November 2010 08:00](http://twitter.com/brokep/status/9517070882447360)
 
-## Building
+### Build instructions
 
 For now you need the following libraries installed:
 
@@ -19,8 +21,7 @@ For now you need the following libraries installed:
 - [libevent](http://monkey.org/~provos/libevent/) >= 2.0, event based network, http & dns library
 - [libgcrypt](http://www.gnupg.org/) >= 1.4.1, general purpose crypto library based on the code used in GnuPG
 
-#### CMake
-You can use cmake to build the project:
+You can also use cmake to build the project:
 
     make cmake.build [CMAKE_OPTS=<cmake options>]
 
@@ -35,11 +36,6 @@ Here are some of the variables you might want to tweak:
 This can be passed to CMake as follows:
 
     cmake .. -DCMAKE_BUILD_TYPE=Debug -DLIBEVENT2_PREFIX=/opt/libevent2/
-
-#### Scons:
-
-    scons -j4
-
 
 ### Usage
 

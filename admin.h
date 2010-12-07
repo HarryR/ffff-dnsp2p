@@ -1,9 +1,6 @@
 #ifndef ADMIN_H_
 #define ADMIN_H_
 
-// Standard logging method
-#define LOG(...) fprintf (stderr, __VA_ARGS__)
-
 #include "ffff.h"
 #include <event2/http.h>
 

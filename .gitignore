@@ -1,14 +1,6 @@
-dnsp2p
-.sconf_temp/
-.sconsign.dblite
-config.log
-# Netbeans?  Eeeew
-nbproject
-Makefile-DNS-P2P-panda.mk
 .dep.inc
 *.o
 *.a
-*.db
 Makefile-DNS-P2P-panda.mk
 nbproject/
 seccure/seccure-decrypt

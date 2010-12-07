@@ -27,7 +27,7 @@ opget_dns_callback(f4_ctx_t* ctx, struct f4op *op, struct evdns_server_request *
     // XXX: re-workt dht_search to use ipv4/ipv6 as available rather than
     // explicitly specifying AF_INET or AF_INET6
     // XXX: Nor do we care about a callback, that's handled elsewhere
-    dht_search( (const unsigned char*)op->id, 0, AF_INET, NULL, NULL );
+    dht_search( op->id, 0, AF_INET, NULL, NULL );
 }
 
 f4op_t *

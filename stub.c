@@ -6,7 +6,6 @@
 #include <event2/event.h>
 #include <unistd.h>
 #include <libgen.h>
-#include "admin.h"
 
 /**
  * This is the main loop.
@@ -70,13 +69,13 @@ main(int argc, char** argv) {
     // Init gcrypt.
     err = gcry_control(GCRYCTL_INIT_SECMEM, 1);
     if (gcry_err_code(err)) {
-      LOG("Cannot enable gcrypt's secure memory management\n");
+      fprintf(stderr, "Cannot enable gcrypt's secure memory management\n");
       exit(EXIT_FAILURE);
     }
 
     err = gcry_control(GCRYCTL_USE_SECURE_RNDPOOL, 1);
     if (gcry_err_code(err)) {
-      LOG("Cannot enable gcrypt's secure random number generator\n");
+      fprintf(stderr, "Cannot enable gcrypt's secure random number generator\n");
       exit(EXIT_FAILURE);
     }
 
