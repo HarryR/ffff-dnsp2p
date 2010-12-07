@@ -1,6 +1,7 @@
 /*
 Copyright (c) 2010 by Juliusz Chroboczek
-
+Portions Copyright (c) 2010 Harry Roberts
+ 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -39,6 +40,7 @@ THE SOFTWARE.
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <assert.h>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -2717,6 +2719,85 @@ memmem(const void *haystack, size_t haystacklen,
     return NULL;
 }
 #endif
+
+static bool
+dht_message_parse_x(dht_message_t *m) {
+	if( m->obj->type != BENC_DICT ) {
+		return false;
+    }
+	
+    benc_bstr_t t_key = {1,"t"};
+    bobj_t *t = bobj_dict_lookup(m->obj, &t_key);
+	if( t == NULL || t->type != BENC_BSTR || t->as.bstr->len <= 0 ) {
+		debugf("BT-DHT 't' was invalid");
+		return false;
+	}
+	
+    benc_bstr_t y_key = {1,"y"};
+    bobj_t *y = bobj_dict_lookup(m->obj, &y_key);	
+	if( y == NULL || y->type != BENC_BSTR  || t->as.bstr->len != 1 ) {
+		debugf("BT-DHT 'y' was invalid");
+		return false;
+	}
+	
+	if( strncmp(y->as.bstr->bytes,"q",1) == 0 ) {
+		m->type = DHT_MSG_QUERY;
+	}
+	else if( strncmp(y->as.bstr->bytes,"r",1) == 0 ) {
+		m->type = DHT_MSG_RESPONSE;
+	}
+	else if( strncmp(y->as.bstr->bytes,"e",1) == 0 ) {
+		m->type = DHT_MSG_ERR;
+	} 
+	else {
+		debugf("Unknown message type '%s'", y->as.bstr->bytes);
+		return false;
+	}
+	
+	if( m->type == DHT_MSG_QUERY) {
+		benc_bstr_t a_key = {1,"a"};
+		m->a = bobj_dict_lookup(m->obj, &a_key); 
+	}
+	else if( m->type == DHT_MSG_RESPONSE ) {
+		benc_bstr_t r_key = {1,"r"};
+		m->r = bobj_dict_lookup(m->obj, &r_key);	
+	}
+	else if( m->type == DHT_MSG_ERR ) {
+		benc_bstr_t e_key = {1,"e"};
+		m->e = bobj_dict_lookup(m->obj, &e_key);	
+		
+		if( m->e->type != BENC_LIST ) {
+			return false;
+		}
+	}
+	
+    m->t = t->as.bstr->bytes;
+    m->y = y->as.bstr->bytes;
+	return true;
+}
+
+// Reference implementation for: http://bittorrent.org/beps/bep_0005.html
+dht_message_t *dht_message_parse(const char *buf, int buflen) {
+    dht_message_t *m = calloc(sizeof(dht_message_t),1);
+    assert( m != NULL );
+
+    m->buf = bbuf_new(buflen, strdup(buf));
+    m->obj = bdec_mem(m->buf);
+    if( ! m->obj || ! dht_message_parse_x(m) ) {
+        dht_message_free(m);
+        return NULL;
+    }
+    
+    return m;
+}
+
+void dht_message_free(dht_message_t *m) {
+    assert( m != NULL );
+    if( m->obj ) bobj_free(m->obj);
+    bbuf_free(m->buf);
+    memset(m, 0, sizeof(dht_message_t));
+    free(m);
+}
 
 static int
 parse_message(const unsigned char *buf, int buflen,

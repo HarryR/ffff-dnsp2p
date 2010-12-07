@@ -28,6 +28,8 @@ THE SOFTWARE.
 #include <netinet/in.h>
 #include <stdio.h>
 
+#include "libbenc/benc.h"
+
 typedef void
 dht_callback(void *closure, int event,
              unsigned char *info_hash,
@@ -65,5 +67,47 @@ void dht_hash(void *hash_return, int hash_size,
               const void *v2, int len2,
               const void *v3, int len3);
 int dht_random_bytes(void *buf, size_t size);
+
+enum dht_message_type {
+	DHT_MSG_ERR = 0,
+	DHT_MSG_QUERY = 1,
+	DHT_MSG_RESPONSE = 2,
+};
+typedef enum dht_message_type dht_message_type_e;
+
+struct _dht_message {
+    bbuf_t *buf;
+    bobj_t *obj;
+
+	dht_message_type_e type;
+	
+    char *t;
+    char *y;
+	char *q;
+	bobj_t *a;
+    bobj_t *r;
+	bobj_t *e;
+    
+    unsigned char *tid_return;
+    int tid_len;
+    unsigned char *id_return;
+    unsigned char *info_hash_return;
+    unsigned char *target_return;
+    unsigned short port_return;
+    unsigned char *token_return;
+    int token_len;
+    unsigned char *nodes_return;
+    int nodes_len;
+    unsigned char *nodes6_return;
+    int nodes6_len;
+    unsigned char *values_return;
+    int values_len;
+    unsigned char *values6_return;
+    int values6_len;
+    int want_return;
+};
+typedef struct _dht_message dht_message_t;
+dht_message_t *dht_message_parse(const char *buf, int buflen);
+void dht_message_free(dht_message_t *m);
 
 #endif

@@ -5,19 +5,13 @@
 # Fuck all the geeks who do nothing but quibble
 # I present: FFFF-dnsp2p
 
-SYS:=$(shell uname -s)
+include common.mak
 
-CFLAGS=-I../libevent-root/include -I../tokyocabinet-root/include -I../libgcrypt-root/include
-CFLAGS+=-Wall -Wextra -std=gnu99 -O0 -ggdb
-
-LDFLAGS=-L../libevent-root/lib -L../tokyocabinet-root/lib -L../libgcrypt-root/lib
+CFLAGS+=-I$(TOP)/../libevent-root/include -I$(TOP)/../tokyocabinet-root/include -I$(TOP)/../libgcrypt-root/include
+LDFLAGS=-L$(TOP)/../libevent-root/lib -L$(TOP)/../tokyocabinet-root/lib -L$(TOP)/../libgcrypt-root/lib
 LIBS=-lgcrypt -levent -ltokyocabinet
 
-ifeq ($(SYS),Darwin)
-CFLAGS+=-fnested-functions
-endif
-
-libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o op_get.o
+libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o op_get.o crypto.o
 dnsp2p_objs=stub.o
 seccure_objs=seccure/curves.o seccure/serialize.o seccure/protocol.o seccure/ecc.o seccure/aes256ctr.o seccure/numtheory.o
 dht_objs=dht/dht.o
@@ -28,10 +22,13 @@ all: libffff.a dnsp2p.exe
 cmake.build:
 	-mkdir -p cmake.build && cd cmake.build && cmake .. $(CMAKE_OPTS)
 
+libbenc/libbenc.a:
+	make -C libbenc libbenc.a
+
 libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs)
 	$(AR) ru $@ $+
 
-dnsp2p.exe: $(dnsp2p_objs) libffff.a
+dnsp2p.exe: $(dnsp2p_objs) libffff.a libbenc/libbenc.a
 	$(CC) -o $@ $(LDFLAGS) $+ $(LIBS)
 
 clean:
@@ -39,8 +36,5 @@ clean:
 	-rm -f *.o
 	-rm -f *.exe
 	-rm -f dht/*.o
-	
-distclean: clean
-	-rm -f CMakeCache.txt
-	-rm -f CMakeFiles
-	-rm -rf cmake.build
+	-make -C libbenc clean
+	-rm -rf cmake.build	
