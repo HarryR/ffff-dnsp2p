@@ -20,6 +20,7 @@ env.Append(CPPPATH = Split("""
         ../libevent-root/include
         ../tokyocabinet-root/include 
         ../libgcrypt-root/include
+        #
     """),
     CFLAGS = " -Wall -Wextra -std=gnu99",
     LIBPATH = ["/usr/local/lib",
@@ -37,13 +38,14 @@ elif re.search("BSD", sys):
     env.Append(CFLAGS=["-ggdb3"])
 
 libffff_objs = Split("""
-    ffff.c
+    ffff.c 
     properties.c
     admin.c
     dns.c
     rbtree.c
     ops.c
     op_get.c
+    crypto.c
 """)
 seccure_objs = Split("""
     seccure/curves.o
@@ -68,7 +70,7 @@ if not conf.CheckLib('event') or not conf.CheckFunc('evdns_base_new'):
 conf.Finish()
 
 Export('env')
-SConscript(['#seccure/SConscript', '#dht/SConscript'])
+SConscript(['#seccure/SConscript', '#dht/SConscript', '#libbenc/SConscript'])
 
 env.StaticLibrary('ffff', [libffff_objs, seccure_objs, dht_objs])
-env.Program('dnsp2p', ['stub.c', 'libffff.a', '#dht/libdht.a'])
+env.Program('dnsp2p', ['stub.c', 'libffff.a', '#dht/libdht.a', '#libbenc/libbenc.a'])
