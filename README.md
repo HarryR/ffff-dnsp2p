@@ -51,7 +51,7 @@ This can be passed to CMake as follows:
      -P <addr:port>    Listen address & port for P2P connectivity (TCP+UDP)
      -s <file>         DB file for node state storage
      -p <file>         DB file for persistent publish storage
-     -n <file>         Properties file for peer list
+     -b <file>         Peer file containing bootstrap nodes 
      -h                Show this help
 
 ### Give me more
