@@ -1836,6 +1836,159 @@ bucket_maintenance(int af)
     return 0;
 }
 
+static int
+_dht_handle_reply( dht_periodic_state_t *state ) {
+    assert( state != NULL );     
+    dht_message_t *msg = state->msg;
+    assert( msg->type == DHT_MSG_RESPONSE );
+    
+    if( msg->t_len != 4 ) {
+        debugf("Broken node truncates transaction ids: ");
+        debug_printable(state->buf, state->rc);
+        debugf("\n");
+        /* This is really annoying, as it means that we will
+         time-out all our searches that go through this node.
+         Kill it. */
+        broken_node(msg->arg_id, state->source, state->sourcelen);
+        return 0;
+    }
+    
+    if( tid_match(msg->t, "pn", NULL) ) {
+        debugf("Pong!");
+        new_node(msg->t, state->source, state->sourcelen, 2);
+        return 1;
+    }
+    
+    if ( ! tid_match(msg->t, "fn", NULL) && ! tid_match(msg->t, "gp", NULL) ) {
+        debugf("Unknown ID '%s'!\n", msg->t);
+        assert( false ); 
+        return 0;
+    }
+    
+    // Response for get peers or found nodes
+    unsigned char *nodes;
+    int nodes_len;
+    bobj_t *nodes_obj;
+    
+    unsigned char *nodes6;
+    int nodes6_len;
+    bobj_t *nodes6_obj;
+    
+    benc_bstr_t nodes_key = {5,"nodes"};
+    benc_bstr_t nodes6_key = {6,"nodes6"};
+    
+    nodes_obj = bobj_dict_lookup(msg->a, &nodes_key);
+    nodes6_obj = bobj_dict_lookup(msg->a, &nodes6_key);
+    
+    if( nodes_obj == NULL && nodes6_obj == NULL ) {
+        debugf("Error: no 'nodes' or 'nodes6' key passed");
+        broken_node(msg->arg_id, state->source, state->sourcelen);
+        return 0;
+    }
+    
+    if( nodes_obj ) {
+        nodes = nodes_obj->as.bstr->bytes;
+        nodes_len = nodes_obj->as.bstr->len;
+    }
+    if( nodes6_obj ) {
+        nodes6 = nodes6_obj->as.bstr->bytes;
+        nodes6_len = nodes6_obj->as.bstr->len;
+    }
+    
+    int gp = 0;
+    struct search *sr = NULL;
+    bobj_t *token = NULL;
+    if(tid_match(msg->t, "gp", &state->ttid)) {
+        gp = 1;
+        sr = find_search(state->ttid, state->source->sa_family);            
+        if( sr ) {
+            benc_bstr_t token_key = {5,"token"};
+            token = bobj_dict_lookup(msg->a, &token_key);
+            if( ! token ) {
+                debugf("Node didn't pass a 'token' with search result! BAD NODE!"); 
+                broken_node(msg->arg_id, state->source, state->sourcelen);
+                return 0;
+            }
+        }
+    }
+    debugf("Nodes found (%d+%d)%s!\n", nodes_len/26, nodes6_len/38, gp ? " for get_peers" : "");
+    
+    if(nodes_len % 26 != 0 || nodes6_len % 38 != 0) {
+        debugf("Unexpected length for node info!\n");
+        broken_node(msg->arg_id, state->source, state->sourcelen);
+        return 0;
+    }
+    
+    if(gp && sr == NULL) {
+        debugf("Unknown search!\n");
+        new_node(msg->arg_id, state->source, state->sourcelen, 1);
+        return 0;
+    }
+
+    new_node(msg->arg_id, state->source, state->sourcelen, 2);
+    
+    int i;        
+    for(i = 0; i < nodes_len / 26; i++) {
+        unsigned char *ni = nodes + i * 26;
+        struct sockaddr_in sin;
+        if(id_cmp(ni, myid) == 0)
+            continue;
+        memset(&sin, 0, sizeof(sin));
+        sin.sin_family = AF_INET;
+        memcpy(&sin.sin_addr, ni + 20, 4);
+        memcpy(&sin.sin_port, ni + 24, 2);
+        new_node(ni, (struct sockaddr*)&sin, sizeof(sin), 0);
+        if(sr && sr->af == AF_INET) {
+            insert_search_node(ni, (struct sockaddr*)&sin, sizeof(sin), sr, 0, NULL, 0);
+        }
+    }
+    
+    for(i = 0; i < nodes6_len / 38; i++) {
+        unsigned char *ni = nodes6 + i * 38;
+        struct sockaddr_in6 sin6;
+        if(id_cmp(ni, myid) == 0)
+            continue;
+        memset(&sin6, 0, sizeof(sin6));
+        sin6.sin6_family = AF_INET6;
+        memcpy(&sin6.sin6_addr, ni + 20, 16);
+        memcpy(&sin6.sin6_port, ni + 36, 2);
+        new_node(ni, (struct sockaddr*)&sin6, sizeof(sin6), 0);
+        if(sr && sr->af == AF_INET6) {
+            insert_search_node(ni, (struct sockaddr*)&sin6, sizeof(sin6), sr, 0, NULL, 0);
+        }
+    }
+    
+    if(sr) {
+        /* 
+         * Since we received a reply, the number of
+         * requests in flight has decreased.  Let's push
+         * another request.
+         */
+        search_send_get_peers(sr, NULL);
+
+        insert_search_node(msg->arg_id, state->source, state->sourcelen, sr, 1, token->as.bstr->bytes, token->as.bstr->len);
+
+        benc_bstr_t values_key = {6,"values"};        
+        bobj_t *values = bobj_dict_lookup(msg->r, &values_key);
+        benc_bstr_t values6_key = {7,"values6"};
+        bobj_t *values6 = bobj_dict_lookup(msg->r, &values6_key);
+
+        if( values || values6 ) {
+            debugf("Got values (%d+%d)!\n", values->as.bstr->len / 6, values6->as.bstr->len / 18);
+            if( state->callback ) {
+                if(values){
+                    state->callback(state->closure, DHT_EVENT_VALUES, sr->id, (void*)values->as.bstr->bytes, values->as.bstr->len);
+                }
+                
+                if(values6){
+                    state->callback(state->closure, DHT_EVENT_VALUES6, sr->id, (void*)values6->as.bstr->bytes, values6->as.bstr->len);
+                }                        
+            }
+        }
+    }
+    return 1;
+}
+
 int
 dht_periodic(int available, time_t *tosleep,
              dht_callback *callback, void *closure)
@@ -1845,7 +1998,10 @@ dht_periodic(int available, time_t *tosleep,
     gettimeofday(&now, NULL);
 
     if(available) {
-        int rc, message;
+        dht_periodic_state_t state;
+        int rc;
+        memset(&state, 0, sizeof(state));
+		/*
         unsigned char tid[16], id[20], info_hash[20], target[20];
         unsigned char buf[1536], nodes[256], nodes6[1024], token[128];
         int tid_len = 16, token_len = 128;
@@ -1858,30 +2014,34 @@ dht_periodic(int available, time_t *tosleep,
         struct sockaddr *source = (struct sockaddr*)&source_storage;
         socklen_t sourcelen = sizeof(source_storage);
         unsigned short ttid;
+         */
+        
+        state.source = (struct sockaddr*)&state.source_storage;
+        state.sourcelen = sizeof(struct sockaddr_storage);
 
-        rc = -1;
+        state.rc = -1;
         if(dht_socket >= 0) {
-            rc = recvfrom(dht_socket, buf, 1536, 0, source, &sourcelen);
+            state.rc = recvfrom(dht_socket, state.buf, 1536, 0, state.source, &state.sourcelen);
             if(rc < 0 && errno != EAGAIN) {
-                    return rc;
+                    return state.rc;
             }
         }
         if(dht_socket6 >= 0 && rc < 0) {
-            rc = recvfrom(dht_socket6, buf, 1536, 0,
-                          source, &sourcelen);
+            state.rc = recvfrom(dht_socket6, state.buf, 1536, 0, state.source, &state.sourcelen);
             if(rc < 0 && errno != EAGAIN) {
-                    return rc;
+                    return state.rc;
             }
         }
 
-        if(rc < 0 || sourcelen > sizeof(struct sockaddr_storage))
+        if(state.rc < 0 || state.sourcelen > sizeof(struct sockaddr_storage)) {
             goto dontread;
+        }
 
-        if(is_martian(source))
+        if(is_martian(state.source))
             goto dontread;
 
         for(i = 0; i < DHT_MAX_BLACKLISTED; i++) {
-            if(memcmp(&blacklist[i], source, sourcelen) == 0) {
+            if(memcmp(&blacklist[i], state.source, state.sourcelen) == 0) {
                 debugf("Received packet from blacklisted node.\n");
                 goto dontread;
             }
@@ -1890,40 +2050,51 @@ dht_periodic(int available, time_t *tosleep,
         /* There's a bug in parse_message -- it will happily overflow the
            buffer if it's not NUL-terminated.  For now, put a NUL at the
            end of buffers. */
-
-        if(rc < 1536) {
-            buf[rc] = '\0';
-        } else {
+        if(state.rc < 1536) {
+            state.buf[state.rc] = '\0';
+        }
+        else {
             debugf("Overlong message.\n");
             goto dontread;
         }
 
+		/*
         message = parse_message(buf, rc, tid, &tid_len, id, info_hash,
                                 target, &port, token, &token_len,
                                 nodes, &nodes_len, nodes6, &nodes6_len,
                                 values, &values_len, values6, &values6_len,
                                 &want);
+		*/
+		state.msg = dht_message_parse(state.buf, state.rc);
 
-        if(message < 0 || message == ERROR || id_cmp(id, zeroes) == 0) {
+        if(state.msg == NULL) {
             debugf("Unparseable message: ");
             debug_printable(buf, rc);
             debugf("\n");
+			// XXX: we should probably slap the node for sending bad responses
+			// Use broken_node?
             goto dontread;
         }
 
-        if(id_cmp(id, myid) == 0) {
+        if(id_cmp(state.msg->arg_id, myid) == 0) {
             debugf("Received message from self.\n");
             goto dontread;
         }
 
-        if(message > REPLY) {
-            /* Rate limit requests. */
+		// Rate limit messages
+        if(state.msg->type != DHT_MSG_RESPONSE ) {            
             if(!token_bucket()) {
                 debugf("Dropping request due to rate limiting.\n");
                 goto dontread;
             }
         }
 
+		if( state.msg->type == DHT_MSG_RESPONSE ) {
+			if( ! _dht_handle_response(&state, callback, closure) ) {
+                goto dontread;
+            }
+        }
+		
         switch(message) {
         case REPLY:
             if(tid_len != 4) {
@@ -2706,11 +2877,12 @@ memmem(const void *haystack, size_t haystacklen,
 #endif
 
 static bool
-dht_message_parse_x(dht_message_t *m) {
+_dht_message_parse_impl(dht_message_t *m) {
 	if( m->obj->type != BENC_DICT ) {
 		return false;
     }
 	
+	// Transaction ID
     benc_bstr_t t_key = {1,"t"};
     bobj_t *t = bobj_dict_lookup(m->obj, &t_key);
 	if( t == NULL || t->type != BENC_BSTR || t->as.bstr->len <= 0 ) {
@@ -2718,6 +2890,7 @@ dht_message_parse_x(dht_message_t *m) {
 		return false;
 	}
 	
+	// Query type
     benc_bstr_t y_key = {1,"y"};
     bobj_t *y = bobj_dict_lookup(m->obj, &y_key);	
 	if( y == NULL || y->type != BENC_BSTR  || t->as.bstr->len != 1 ) {
@@ -2738,14 +2911,56 @@ dht_message_parse_x(dht_message_t *m) {
 		debugf("Unknown message type '%s'", y->as.bstr->bytes);
 		return false;
 	}
-	
+		
+	bobj_t *args;	// Args for either query/response
 	if( m->type == DHT_MSG_QUERY) {
 		benc_bstr_t a_key = {1,"a"};
-		m->a = bobj_dict_lookup(m->obj, &a_key); 
+		m->a = bobj_dict_lookup(m->obj, &a_key);
+		args = m->a;
+		if( args == NULL ) {
+			debugf("Cannot find 'a' key");
+			return false;
+		}
+		if( args->type != BENC_DICT ) {
+			debugf("'a' key is not dictionary - invalid!");
+			return false;
+		}
+		
+		benc_bstr_t q_key = {1,"q"};  
+		bobj_t *q = bobj_dict_lookup(m->obj, &q_key);
+		if( q == NULL || q->type != BENC_BSTR ) {
+			debugf("'q' is NULL or not string");
+			return false;
+		} 
+		m->q = q->as.bstr->bytes;
+		if( ! strlen(m->q) ) {
+			debugf("Invalid 'q' - zero length");
+			return false;
+		}
+		
+		// TODO: handle arbitrary messages here!
+		if( strcmp(m->q,"ping") == 0 ) m->query = DHT_QUERY_PING;
+		else if( strcmp(m->q,"find_node") == 0 ) m->query = DHT_QUERY_FIND_NODE;
+		else if( strcmp(m->q,"get_peers") == 0 ) m->query = DHT_QUERY_GET_PEERS;
+		else if( strcmp(m->q,"announce_peer") == 0 ) m->query = DHT_QUERY_ANNOUNCE_PEER;
+		else {
+			debugf("Unknown query type %s", m->q);
+			assert( false ); 			
+		}
 	}
 	else if( m->type == DHT_MSG_RESPONSE ) {
 		benc_bstr_t r_key = {1,"r"};
 		m->r = bobj_dict_lookup(m->obj, &r_key);	
+		args = m->r;
+		
+		if( args == NULL ) {
+			debugf("Couldn't find 'r' key for response");
+			return false;
+		}		
+		if( args->type != BENC_DICT ) {
+			debugf("'r' key was not dictionary - invalid");
+			return false;
+		}
 	}
 	else if( m->type == DHT_MSG_ERR ) {
 		benc_bstr_t e_key = {1,"e"};
@@ -2754,9 +2969,33 @@ dht_message_parse_x(dht_message_t *m) {
 		if( m->e->type != BENC_LIST ) {
 			return false;
 		}
+		if( m->e->as.list == NULL || m->e->as.list->next == NULL ) {
+			debugf("'e' list must have at least 2 elements");
+			return false;
+		}
+	}
+	else {
+		debugf("Unknown query type");
+		return false;
+	}
+	
+	// Query/response must have 'id' key.
+	if( m->type != DHT_MSG_ERR ) { 
+		benc_bstr_t arg_id_key = {2,"id"};
+		bobj_t *arg_id = bobj_dict_lookup(args, &arg_id_key);
+		if( ! arg_id || arg_id->type != BENC_BSTR ) {
+			debugf("Couldn't find 'id' key in arguments/response, or 'id' is invalid");
+			return false;
+		}
+		if( arg_id->as.bstr->len != 20 ) {
+			debugf("Invalid ID, %zu long instead of 20", arg_id->as.bstr->len);
+			return false;
+		}
+		m->arg_id = arg_id->as.bstr->bytes;
 	}
 	
     m->t = t->as.bstr->bytes;
+	m->t_len = t->as.bstr->len;
     m->y = y->as.bstr->bytes;
 	return true;
 }
@@ -2768,7 +3007,7 @@ dht_message_t *dht_message_parse(const char *buf, int buflen) {
 
     m->buf = bbuf_new(buflen, strdup(buf));
     m->obj = bdec_mem(m->buf);
-    if( ! m->obj || ! dht_message_parse_x(m) ) {
+    if( ! m->obj || ! _dht_message_parse_impl(m) ) {
         dht_message_free(m);
         return NULL;
     }

@@ -132,6 +132,7 @@ _f4dns_cb_dnsserver(struct evdns_server_request *req, void *_ctx) {
             break;
 
         default:
+            assert(false);
             // XXX: No dude, we shouldn't do this!
             r_type = "ANY";
             break;
