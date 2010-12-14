@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <stdio.h>
 
 #include "libbenc/benc.h"
+#include "libbenc/bencode.h"
 
 typedef void
 dht_callback(void *closure, int event,
