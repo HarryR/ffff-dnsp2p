@@ -49,6 +49,12 @@ void benc_bstr_encode(bbuf_t *b, benc_bstr_t *s)
     b->ptr += s->len;
 }
 
+char *
+benc_bstr_get(benc_bstr_t *a) {
+	if( a == NULL ) return NULL;
+	return a->bytes;
+}
+
 bool benc_bstr_decode(bbuf_t *b, benc_bstr_t **s_p)
 {
     size_t len = 0;

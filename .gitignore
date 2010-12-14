@@ -1,8 +1,19 @@
-.dep.inc
+# Build results
+*.exe
 *.o
 *.a
-Makefile-DNS-P2P-panda.mk
+dnsp2p
+tmp
+build
+
+# IDE Project files
+Makefile-*.mk
+.dep.inc
 nbproject/
+*.xcodeproj
+ffff-dnsp2p.*
+
+# Seccure output
 seccure/seccure-decrypt
 seccure/seccure-dh
 seccure/seccure-encrypt
@@ -11,11 +22,8 @@ seccure/seccure-sign
 seccure/seccure-signcrypt
 seccure/seccure-veridec
 seccure/seccure-verify
-DNS-P2P-panda.xcodeproj
-*.exe
-dnsp2p
+
+# Temporary cmake files
 CMakeFiles
 cmake_install.cmake
 CmakeCache.txt
-tmp
-build
