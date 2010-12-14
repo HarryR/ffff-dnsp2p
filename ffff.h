@@ -60,11 +60,14 @@ struct f4_ctx {
     struct sockaddr_storage listen_p2p;
     int listen_p2p_sz;
 
-    // dht related stuff
+    /**
+     * The DHT socket and an event which calls f4_cb_dht_read() whenever data is available on the socket.
+     */
     bool dht_done_init;
     evutil_socket_t socket_p2p_dht;
     struct event *socket_p2p_dht_event;
 
+    // This socket is not used, it is intended for an out-of-band communication mechanism between peers.
     evutil_socket_t socket_p2p_app;
 
     /** Should we act as a DNS to P2P resolver? */

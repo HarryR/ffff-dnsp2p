@@ -14,11 +14,30 @@ enum {
 
 struct f4op {
     struct rb_node node;
+
+    /**
+     * This is the DHT ID for the record to get.
+     * The DHT record for "derp.fowehiewhgwe.p2p" is return_value
+     * where: f4crypto_hash_fqdn("derp.fowehiewhgwe.p2p", 0, return_value);
+     * TODO: what is "replica", why is it always 0?
+     */
     unsigned char id[20];
+
+    /**
+     * Whether we are getting from or placing in the DHT swarm.
+     * F4OP_MODE_PUT or F4OP_MODE_GET
+     */
     uint8_t mode;
+
+    /** The type of dns record as a string. EG: "A", "AAAA", "MX" etc. */
     char *type;
+
+    /** The fully qualified domain name EG: "derp.fowehiewhgwe.p2p" */
     char *fqn;
+
+    /** For a GET operation, this is a f4op_get_t object which contains the evdns_server_request. */
     void *data;
+
     void (*dht_callback)(f4_ctx_t* ctx, struct f4op *op, int event, void *data, size_t data_len);
     void (*dns_callback)(f4_ctx_t* ctx, struct f4op *op, struct evdns_server_request *req);
 };

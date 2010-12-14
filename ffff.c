@@ -200,10 +200,23 @@ dht_hash(void *hash_return, int hash_size,
     gcry_md_close(mh);
 }
 
+/**
+ * Handle response from DHT.
+ * f4_cb_dht_read() passes this function to the DHT engine when new DHT data becomes available.
+ * This function handles the response from DHT.
+ *
+ * @param _ctx the ffff engine context cast to void.
+ * @param event DHT_EVENT_VALUES if sent over ip4, DHT_EVENT_VALUES6 if sent over ipv6.
+ * @param info_hash the hash which was searched for.
+ * @param data the result of the search.
+ * @param data_len the length of the result.
+ */
 static void
-f4_cb_dht(void *_ctx, int event,
-             unsigned char *info_hash,
-             void *data, size_t data_len)
+f4_cb_dht(void *_ctx,
+          int event,
+          unsigned char *info_hash,
+          void *data,
+          size_t data_len)
 {
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
     f4op_t *op = f4op_find(ctx->op_ctx, info_hash);
@@ -215,9 +228,20 @@ f4_cb_dht(void *_ctx, int event,
     // TODO: log that we have a DHT event for an unknown operation!
 }
 
+/**
+ * Handle event triggered by DHT response becoming available.
+ * This is called by libevent when there is incoming data on the DHT socket.
+ *
+ * @param socket the socket which is used for p2p communication.
+ * @param event type of event. This should only be EV_READ since that is the only event registered.
+ * @param _ctx the ffff engine context cast to void.
+ */
 static void
-f4_cb_dht_read(evutil_socket_t s, short event, void *_ctx ) {
-    s = s;  // avoid an "unused" warning
+f4_cb_dht_read(evutil_socket_t socket, short event, void *_ctx ) {
+
+    // avoid an "unused" warning
+    socket = socket;
+
     f4_ctx_t *ctx = (f4_ctx_t*)_ctx;
     time_t tosleep;
     dht_periodic(event == EV_READ, &tosleep, f4_cb_dht, ctx);
@@ -292,6 +316,13 @@ f4_init_p2p( f4_ctx_t *ctx ) {
     return true;
 }
 
+/**
+ * Set up cryptography.
+ * Set curve parameters in ffff engine context (ctx->cp)
+ * Generate key pair (ctx->private_key and ctx->public_key)
+ *
+ * @param ctx the ffff engine context.
+ */
 static void
 f4_init_crypto(f4_ctx_t *ctx) {
     struct affine_point private_P;
