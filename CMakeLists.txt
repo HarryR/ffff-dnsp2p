@@ -26,3 +26,7 @@ target_link_libraries(ffff seccure dht ${LIBEVENT2_LIBRARIES} ${TOKYOCABINET_LIB
 add_executable(dnsp2p stub.c)
 target_link_libraries(dnsp2p ffff)
 install(TARGETS dnsp2p RUNTIME DESTINATION sbin)
+
+# Everything must be tested.
+enable_testing()
+add_subdirectory(test)
