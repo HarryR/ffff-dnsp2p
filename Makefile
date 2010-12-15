@@ -7,9 +7,9 @@
 
 include common.mak
 
-CFLAGS+=-I$(TOP)/../libevent-root/include -I$(TOP)/../tokyocabinet-root/include -I$(TOP)/../libgcrypt-root/include
-LDFLAGS=-L$(TOP)/../libevent-root/lib -L$(TOP)/../tokyocabinet-root/lib -L$(TOP)/../libgcrypt-root/lib
-LIBS=-lgcrypt -levent -ltokyocabinet
+CFLAGS+=$(FFFF_CFLAGS)
+LDFLAGS+=$(FFFF_LDFLAGS)
+LIBS+=$(FFFF_LIBS)
 
 libffff_objs=ffff.o properties.o admin.o dns.o rbtree.o ops.o op_get.o crypto.o
 dnsp2p_objs=stub.o
@@ -30,6 +30,10 @@ libffff.a: $(libffff_objs) $(seccure_objs) $(dht_objs)
 
 dnsp2p.exe: $(dnsp2p_objs) libffff.a libbenc/libbenc.a
 	$(CC) -o $@ $(LDFLAGS) $+ $(LIBS)
+	
+.PHONY: test
+test: libffff.a
+	make -C test
 
 clean:
 	-rm -f *.a

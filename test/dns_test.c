@@ -1,5 +1,7 @@
-#include "test_framework.c"
-#include "../dns.c"
+#include <stdio.h>
+
+#include "test_framework.h"
+#include "dns.h"
 
 int count_char_test(void)
 {
