@@ -10,9 +10,15 @@
 #include <event2/dns_struct.h>
 #include <ctype.h>
 
+/**
+ * Count instances of a given character in a string.
+ *
+ * @param str the string to look in. This must be null terminated!
+ * @param c the character to count instances of.
+ */
 static size_t
-count_char( const char *str, char c ) {
-    size_t ret;
+count_char( const char *str, const char c ) {
+    size_t ret = 0;
     while( *str ) {
         if( *str++ == c ) ret++;
     }
