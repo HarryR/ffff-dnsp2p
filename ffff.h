@@ -39,7 +39,7 @@ struct _f4_peer {
  */
 struct f4_ctx {
     bool is_running;
-    unsigned int errno;
+    unsigned int error_no;
     struct event_base *base;
 
     /** Backing database for all persistent state */

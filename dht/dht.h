@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 typedef void
 dht_callback(void *closure, int event,
-             unsigned char *info_hash,
+             char *info_hash,
              void *data, size_t data_len);
 
 #define DHT_EVENT_NONE 0
@@ -47,12 +47,12 @@ extern FILE *dht_debug;
 struct sockaddr_in6;
 struct sockaddr_in;
 
-int dht_init(int s, int s6, const char *id, const unsigned char *v);
-int dht_insert_node(const unsigned char *id, struct sockaddr *sa, int salen);
+int dht_init(int s, int s6, const char *id, const char *v);
+int dht_insert_node(const char *id, struct sockaddr *sa, int salen);
 int dht_ping_node(struct sockaddr *sa, int salen);
 int dht_periodic(int available, time_t *tosleep,
                  dht_callback *callback, void *closure);
-int dht_search(const unsigned char *id, int port, int af,
+int dht_search(const char *id, int port, int af,
                dht_callback *callback, void *closure);
 int dht_nodes(int af,
               int *good_return, int *dubious_return, int *cached_return,
@@ -90,18 +90,18 @@ struct _dht_message {
     bbuf_t *buf;
     bobj_t *obj;
 
-	dht_message_type_e type;
-	dht_query_type_e query;
+    dht_message_type_e type;
+    dht_query_type_e query;
 	
     char *t;
-	int t_len;
+    int t_len;
     char *y;
-	char *q;
-	bobj_t *a;
+    char *q;
+    bobj_t *a;
     bobj_t *r;
-	bobj_t *e;
+    bobj_t *e;
 	
-	char *arg_id;
+    char *arg_id;
 };
 typedef struct _dht_message dht_message_t;
 

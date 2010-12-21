@@ -270,7 +270,7 @@ f4_init_p2p( f4_ctx_t *ctx ) {
     ctx->socket_p2p_dht = socket(ctx->listen_p2p.ss_family, SOCK_DGRAM, 0);
     if( ctx->socket_p2p_dht == -1 ) {
         perror("Cannot p2p dht socket()");
-        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        ctx->error_no = F4_ERR_CANT_OPEN_SOCKET_P2P;
         return false;
     }
     // XXX: we need separate sockets for v4 and v6 DHT sockets
@@ -281,14 +281,14 @@ f4_init_p2p( f4_ctx_t *ctx ) {
     //evutil_make_socket_nonblocking(ctx->socket_p2p_dht);
     if( ! listen(ctx->socket_p2p_dht, 10) ) {
         perror("Cannot listen() p2p dht");
-        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        ctx->error_no = F4_ERR_CANT_OPEN_SOCKET_P2P;
         return false;
     }
     evutil_make_listen_socket_reuseable(ctx->socket_p2p_dht);
 
     if( bind(ctx->socket_p2p_dht, (struct sockaddr *)&ctx->listen_p2p, ctx->listen_p2p_sz) != 0 ) {
         perror("Cannot bind() p2p dht");
-        ctx->errno = F4_ERR_CANT_OPEN_SOCKET_P2P;
+        ctx->error_no = F4_ERR_CANT_OPEN_SOCKET_P2P;
         return false;
     }
 
@@ -367,7 +367,7 @@ f4_init(f4_ctx_t *ctx) {
     assert( ctx->db_file != NULL );
     if( ! tctdbopen(ctx->db, ctx->db_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
         f4_log(ctx, "Couldn't open status DB: %s\n", tctdberrmsg(tctdbecode(ctx->db)));
-        ctx->errno = F4_ERR_CANT_OPEN_DB;
+        ctx->error_no = F4_ERR_CANT_OPEN_DB;
         return false;
     }
 
@@ -376,7 +376,7 @@ f4_init(f4_ctx_t *ctx) {
         assert( ctx->publish_db != NULL );
         if( ! tctdbopen(ctx->publish_db, ctx->publish_file, TDBOWRITER | TDBOREADER | TDBOCREAT) ) {
             f4_log(ctx, "Couldn't open publish DB: %s\n", tctdberrmsg(tctdbecode(ctx->publish_db)));
-            ctx->errno = F4_ERR_CANT_OPEN_PUBLISH_DB;
+            ctx->error_no = F4_ERR_CANT_OPEN_PUBLISH_DB;
             return false;
         }
     }
@@ -385,19 +385,19 @@ f4_init(f4_ctx_t *ctx) {
     f4op_init_ctx(ctx->op_ctx);
 
     if( ctx->bootstrap_file && ! f4_init_peers(ctx) )  {
-        ctx->errno = F4_ERR_CANT_INIT_PEERS;
+        ctx->error_no = F4_ERR_CANT_INIT_PEERS;
         return false;
     }
 
     if( ! f4_init_p2p(ctx) ) {
-        ctx->errno = F4_ERR_CANT_INIT_P2P;
+        ctx->error_no = F4_ERR_CANT_INIT_P2P;
         return false;
     }
 
     if( ctx->role_admin ) {
         ctx->admin_ctx = f4admin_new(ctx);
         if( ! f4admin_init(ctx->admin_ctx) ) {
-            ctx->errno = F4_ERR_CANT_INIT_ADMIN;
+            ctx->error_no = F4_ERR_CANT_INIT_ADMIN;
             return false;
         }
     }
@@ -405,7 +405,7 @@ f4_init(f4_ctx_t *ctx) {
     if( ctx->role_dns ) {
         ctx->dns_ctx = f4dns_new(ctx);
         if( ! f4dns_init(ctx->dns_ctx) ) {
-            ctx->errno = F4_ERR_CANT_INIT_DNS;
+            ctx->error_no = F4_ERR_CANT_INIT_DNS;
             return false;
         }
     }
