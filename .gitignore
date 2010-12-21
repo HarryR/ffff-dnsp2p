@@ -10,6 +10,7 @@ seccure/seccure-key
 seccure/seccure-sign
 seccure/seccure-signcrypt
 seccure/seccure-veridec
+ffff-dnsp2p.*
 seccure/seccure-verify
 DNS-P2P-panda.xcodeproj
 *.exe

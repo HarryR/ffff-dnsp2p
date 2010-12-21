@@ -1,0 +1,3 @@
+[submodule "libjson"]
+	path = libjson
+	url = https://github.com/vincenthz/libjson.git
