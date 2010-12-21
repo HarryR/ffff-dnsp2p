@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <stdio.h>
 
 #include "libbenc/benc.h"
+#include "libbenc/bencode.h"
 
 typedef void
 dht_callback(void *closure, int event,
@@ -75,38 +76,48 @@ enum dht_message_type {
 };
 typedef enum dht_message_type dht_message_type_e;
 
+enum dht_query_type {
+	DHT_QUERY_ERROR = 0,
+	DHT_QUERY_REPLY = 1,
+	DHT_QUERY_PING = 2,
+	DHT_QUERY_FIND_NODE = 3,
+	DHT_QUERY_GET_PEERS = 4,
+	DHT_QUERY_ANNOUNCE_PEER = 5,
+};
+typedef enum dht_query_type dht_query_type_e;
+
 struct _dht_message {
     bbuf_t *buf;
     bobj_t *obj;
 
 	dht_message_type_e type;
+	dht_query_type_e query;
 	
     char *t;
+	int t_len;
     char *y;
 	char *q;
 	bobj_t *a;
     bobj_t *r;
 	bobj_t *e;
-    
-    unsigned char *tid_return;
-    int tid_len;
-    unsigned char *id_return;
-    unsigned char *info_hash_return;
-    unsigned char *target_return;
-    unsigned short port_return;
-    unsigned char *token_return;
-    int token_len;
-    unsigned char *nodes_return;
-    int nodes_len;
-    unsigned char *nodes6_return;
-    int nodes6_len;
-    unsigned char *values_return;
-    int values_len;
-    unsigned char *values6_return;
-    int values6_len;
-    int want_return;
+	
+	char *arg_id;
 };
 typedef struct _dht_message dht_message_t;
+
+struct _dht_periodic_state {
+    dht_message_t *msg;
+    struct sockaddr_storage source_storage;
+    struct sockaddr *source;
+    socklen_t sourcelen;
+    unsigned short ttid;
+    dht_callback *callback;
+    void *closure;
+    char buf[1536];
+    int rc;
+};
+typedef struct _dht_periodic_state dht_periodic_state_t;
+
 dht_message_t *dht_message_parse(const char *buf, int buflen);
 void dht_message_free(dht_message_t *m);
 

@@ -33,6 +33,7 @@ size_t          benc_bstr_repsize(benc_bstr_t *s);
 void            benc_bstr_encode(bbuf_t *b, benc_bstr_t *s);
 bool            benc_bstr_decode(bbuf_t *b, benc_bstr_t **s_p);
 int             benc_bstr_compare(benc_bstr_t *a, benc_bstr_t *b);
+char *			benc_bstr_get(benc_bstr_t *a);
 
 void            benc_list_free(benc_list_entry_t *head);
 size_t          benc_list_repsize(benc_list_entry_t *head);
