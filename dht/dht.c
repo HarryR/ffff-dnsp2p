@@ -338,9 +338,9 @@ debugf(const char *format, ...)
 }
 
 static void
-debug_printable(const unsigned char *buf, int buflen)
+debug_printable(const char *buf, size_t buflen)
 {
-    int i;
+    size_t i;
     if(dht_debug) {
         for(i = 0; i < buflen; i++)
             putc(buf[i] >= 32 && buf[i] <= 126 ? buf[i] : '.', dht_debug);
@@ -1837,7 +1837,15 @@ bucket_maintenance(int af)
 }
 
 static int
-_dht_handle_reply( dht_periodic_state_t *state ) {
+_dht_handle_query( dht_periodic_state_t *state ) {
+	assert( state != NULL );
+	dht_message_t *msg = state->msg;
+	assert( msg->type == DHT_MSG_QUERY );
+	return 0;
+}
+
+static int
+_dht_handle_response( dht_periodic_state_t *state ) {
     assert( state != NULL );     
     dht_message_t *msg = state->msg;
     assert( msg->type == DHT_MSG_RESPONSE );
@@ -2066,10 +2074,9 @@ dht_periodic(int available, time_t *tosleep,
                                 &want);
 		*/
 		state.msg = dht_message_parse(state.buf, state.rc);
-
         if(state.msg == NULL) {
             debugf("Unparseable message: ");
-            debug_printable(buf, rc);
+            //debug_printable(buf, rc);
             debugf("\n");
 			// XXX: we should probably slap the node for sending bad responses
 			// Use broken_node?
@@ -2090,20 +2097,22 @@ dht_periodic(int available, time_t *tosleep,
         }
 
 		if( state.msg->type == DHT_MSG_RESPONSE ) {
-			if( ! _dht_handle_response(&state, callback, closure) ) {
-                goto dontread;
-            }
+			_dht_handle_response(&state);
         }
+		else if( state.msg->type == DHT_MSG_QUERY ) {
+			_dht_handle_query(&state);
+		}
 		
+		/*
         switch(message) {
         case REPLY:
             if(tid_len != 4) {
                 debugf("Broken node truncates transaction ids: ");
                 debug_printable(buf, rc);
                 debugf("\n");
-                /* This is really annoying, as it means that we will
-                   time-out all our searches that go through this node.
-                   Kill it. */
+                // This is really annoying, as it means that we will
+                //   time-out all our searches that go through this node.
+                //   Kill it.
                 broken_node(id, source, sourcelen);
                 goto dontread;
             }
@@ -2164,9 +2173,9 @@ dht_periodic(int available, time_t *tosleep,
                         }
                     }
                     if(sr)
-                        /* Since we received a reply, the number of
-                           requests in flight has decreased.  Let's push
-                           another request. */
+                        // Since we received a reply, the number of
+                        //   requests in flight has decreased.  Let's push
+                        //   another request.
                         search_send_get_peers(sr, NULL);
                 }
                 if(sr) {
@@ -2204,7 +2213,7 @@ dht_periodic(int available, time_t *tosleep,
                             sr->nodes[i].pinged = 0;
                             break;
                         }
-                    /* See comment for gp above. */
+                    /// See comment for gp above.
                     search_send_get_peers(sr, NULL);
                 }
             } else {
@@ -2277,12 +2286,13 @@ dht_periodic(int available, time_t *tosleep,
                 break;
             }
             storage_store(info_hash, source);
-            /* Note that if storage_store failed, we lie to the requestor.
-               This is to prevent them from backtracking, and hence
-               polluting the DHT. */
+            // Note that if storage_store failed, we lie to the requestor.
+            //   This is to prevent them from backtracking, and hence
+            //   polluting the DHT.
             debugf("Sending peer announced.\n");
             send_peer_announced(source, sourcelen, tid, tid_len);
         }
+        */
     }
 
  dontread:
@@ -3023,6 +3033,7 @@ void dht_message_free(dht_message_t *m) {
     free(m);
 }
 
+/*
 static int
 parse_message(const unsigned char *buf, int buflen,
               unsigned char *tid_return, int *tid_len,
@@ -3037,7 +3048,7 @@ parse_message(const unsigned char *buf, int buflen,
 {
     const unsigned char *p;
 
-    /* This code will happily crash if the buffer is not NUL-terminated. */
+    // This code will happily crash if the buffer is not NUL-terminated.
     if(buf[buflen] != '\0') {
         debugf("Eek!  parse_message with unterminated buffer.\n");
         return -1;
@@ -3238,3 +3249,4 @@ parse_message(const unsigned char *buf, int buflen,
     debugf("Truncated message.\n");
     return -1;
 }
+*/
